@@ -14,9 +14,25 @@
     '';
   };
 
+  home.shellAliases = {
+    firefox = "firefox -profilemanager";
+  };
+
   home.packages = [
     pkgs.neofetch
     pkgs.sxiv
+    pkgs.ipfs
+
+    pkgs.libnotify
+    pkgs.scrot
+
+    pkgs.pywal
+
+    # coc
+    pkgs.nodejs
+
+    # coc-lua
+    pkgs.sumneko-lua-language-server
 
     pkgs.terminus_font_ttf
     pkgs.dejavu_fonts
@@ -71,18 +87,38 @@
   #   };
   # };
 
+  i18n.inputMethod = {
+    enabled = "fcitx";
+    fcitx.engines = with pkgs.fcitx-engines; [ mozc hangul ];
+  };
+
   programs.neovim = {
     enable = true;
     viAlias = true;
     vimAlias = true;
-    # coc = {
-    #   enable = true;
-    # };
+    coc = {
+      enable = true;
+      settings = {
+        "suggest.noselect" = true;
+        "suggest.enablePreview" = true;
+        "suggest.enablePreselect" = false;
+        "suggest.disableKind" = true;
+        languageserver = {
+          lua = {
+            command = "lua-language-server";
+            filetypes = [ "lua" ];
+          };
+        };
+      };
+    };
     plugins = with pkgs.vimPlugins; [
       vim-nix
+      coc-lua
     ];
     extraConfig = ''
       set number
+      colorscheme default
+      set mouse=
       set termguicolors
       set tabstop=4
       set encoding=utf-8
@@ -163,6 +199,10 @@
           "Home Manager Config Options" = {
             url = "https://rycee.gitlab.io/home-manager/options.html";
           };
+          "NixOS Packages" = {
+            url = "https://search.nixos.org/";
+            keyword = "@nixos";
+          };
 	    };
         settings = pkgs.lib.recursiveUpdate common-settings {
         };
@@ -180,7 +220,7 @@
   programs.urxvt = {
     enable = true;
     fonts = [
-      "xft:Terminus (TTF):pixelsize=18"
+      "8x13"
       "xft:Noto Sans CJK:style=Regular:pixelsize=18"
       "xft:Noto Color Emoji:style=Regular:pixelsize=18"
     ];
@@ -216,14 +256,52 @@
     pass.enable = true;
   };
 
-  xresources.extraConfig = builtins.readFile(
-    pkgs.fetchFromGitHub {
-      owner = "catppuccin";
-      repo = "xresources";
-      rev = "a9cd582faeef2f7410eb7d4b5a83d026e3f2b865";
-      sha256 = "xyqXjlB6gAJiId6VrD9bWXbHQBOXlkcacfMCbeg43bk=";
-    } + "/mocha.Xresources"
-  );
+  xresources.extraConfig = ''
+    ! special
+    *.foreground:   #ffffff
+    *.background:   #000000
+    *.cursorColor:  #ffffff
+
+    ! black
+    *.color0:       #282a2e
+    *.color8:       #ffffff
+
+    ! red
+    *.color1:       #ff3535
+    *.color9:       #2845ff
+
+    ! green
+    *.color2:       #fff967
+    *.color10:      #1248ff
+
+    ! yellow
+    *.color3:       #ffa465
+    *.color11:      #ffffff
+
+    ! blue
+    *.color4:       #008cff
+    *.color12:      #ffffff
+
+    ! magenta
+    *.color5:       #bf00ff
+    *.color13:      #ffffff
+
+    ! cyan
+    *.color6:       #00ffde
+    *.color14:      #ffffff
+
+    ! white
+    *.color7:       #636363
+    *.color15:      #ffffff
+  '';
+#  xresources.extraConfig = builtins.readFile(
+#    pkgs.fetchFromGitHub {
+#      owner = "catppuccin";
+#      repo = "xresources";
+#      rev = "a9cd582faeef2f7410eb7d4b5a83d026e3f2b865";
+#      sha256 = "xyqXjlB6gAJiId6VrD9bWXbHQBOXlkcacfMCbeg43bk=";
+#    } + "/mocha.Xresources"
+#  );
 
   xdg.userDirs = {
     enable = true;
