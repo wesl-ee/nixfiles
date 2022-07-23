@@ -59,7 +59,28 @@
 
   programs.chromium = {
     enable = true;
-    extensions = [ ];
+    extensions = [
+      # Metamask
+      {
+        id = "nkbihfbeogaeaoehlefnkodbefgpgknn";
+        version = "10.17.0";
+      }
+      # Keplr
+      {
+        id = "dmkamcknogkgcdfhhbddcghachkejeap";
+        version = "0.10.13";
+      }
+      # Noscript
+      {
+        id = "doojmbjmlfjjnbmnoijecmcbfeoakpjm";
+        version = "11.4.6";
+      }
+      # ublock
+      {
+        id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";
+        version = "";
+      }
+    ];
   };
 
   services.dunst = {
