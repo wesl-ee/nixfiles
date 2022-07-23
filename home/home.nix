@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 {
   home.username = "wesl-ee";
   home.homeDirectory = "/home/wesl-ee";
@@ -22,6 +22,10 @@
     pkgs.neofetch
     pkgs.sxiv
     pkgs.ipfs
+
+    # Chat
+    pkgs.discord
+    pkgs.slack
 
     pkgs.libnotify
     pkgs.scrot
@@ -53,6 +57,23 @@
       "gyw" = {
         hostname = "gyw.wesl.ee";
         user = "w";
+      };
+    };
+  };
+
+  programs.irssi = {
+    enable = true;
+    networks = {
+      libera = {
+        nick = "wesl-ee";
+        server = {
+          address = "irc.libera.chat";
+          port = 6697;
+          autoConnect = true;
+        };
+        channels = {
+          ncsulug.autoJoin = true;
+        };
       };
     };
   };
@@ -157,8 +178,15 @@
       PASSWORD_STORE_KEY="1068A429B387E62C";
     };
   };
+
   services.password-store-sync = {
   };
+
+  home.file.".config/discord/settings.json".text = ''
+    {
+      "SKIP_HOST_UPDATE": true
+    }
+  '';
 
   programs.firefox = let common-settings = {
       "browser.startup.homepage" = "https://wesl.ee/";
