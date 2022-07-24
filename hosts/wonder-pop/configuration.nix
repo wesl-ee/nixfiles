@@ -63,6 +63,7 @@
     acpi
     wget
     links2
+    nmap
   ];
 
   programs.gnupg.agent = {
