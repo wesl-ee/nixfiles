@@ -14,17 +14,15 @@
     '';
   };
 
-  home.shellAliases = {
-    firefox = "firefox -profilemanager";
-  };
-
   home.packages = [
     pkgs.neofetch
+    pkgs.lynx
     pkgs.sxiv
     pkgs.ipfs
 
     # Chat
     pkgs.discord
+    pkgs.discord-rpc
     pkgs.slack
 
     pkgs.libnotify
@@ -122,12 +120,43 @@
     ];
   };
 
-  # accounts.email = {
-  #   "w@wesleycoakley.com" = {
-  #   };
-  #   "wesley@levana.finance" = {
-  #   };
-  # };
+  programs.mbsync.enable = true;
+  programs.msmtp.enable = true;
+  programs.notmuch = {
+    enable = true;
+    hooks = {
+      preNew = "mbsync --all";
+    };
+  };
+  programs.neomutt = {
+    enable = true;
+    extraConfig = ''
+      set quit
+      unset mark_old
+      set timeout=0
+
+      set mailcap_path = ~/.mailcaprc
+      auto_view text/html
+    '';
+  };
+  accounts.email = {
+    accounts.w = {
+      address = "w@wesleycoakley.com";
+      imap.host = "hooya.org";
+      mbsync = {
+        enable = true;
+        create = "maildir";
+      };
+      msmtp.enable = true;
+      notmuch.enable = true;
+      neomutt.enable = true;
+      primary = true;
+      passwordCommand = "pass email/w@wesleycoakley.com";
+      smtp.host = "hooya.org";
+      realName = "Wesley Coakley";
+      userName = "w@wesleycoakley.com";
+    };
+  };
 
   i18n.inputMethod = {
     enabled = "fcitx";
@@ -141,6 +170,10 @@
     coc = {
       enable = true;
       settings = {
+        "rpc.enabled" = false;
+        "rpc.detailsEditing" = "{workspace_folder}";
+        "rpc.detailsViewing" = "In {workspace_folder}";
+        "rpc.showProblems" = false;
         "suggest.noselect" = true;
         "suggest.enablePreview" = true;
         "suggest.enablePreselect" = false;
@@ -150,6 +183,13 @@
             command = "lua-language-server";
             filetypes = [ "lua" ];
           };
+          rust = {
+            command = "rust-analyzer";
+            filetypes = [ "rust" ];
+            root_pattern = [ "Cargo.toml" "rust-project.json" ];
+          };
+        };
+        languageserver = {
         };
       };
     };
@@ -176,12 +216,17 @@
     enable = true;
     settings = {
       PASSWORD_STORE_KEY="1068A429B387E62C";
+      PASSWORD_STORE_DIR="~/.password-store";
     };
   };
 
   services.password-store-sync = {
   };
 
+  home.file.".mailcaprc".text = ''
+    text/html; lynx -dump %s ; copiousoutput; nametemplate=%s.html
+    text/*; less
+  '';
   home.file.".config/discord/settings.json".text = ''
     {
       "SKIP_HOST_UPDATE": true
@@ -366,6 +411,7 @@
   services.gpg-agent = {
     enable = true;
     defaultCacheTtl = 1800;
+    enableExtraSocket = true;
     enableSshSupport = true;
   };
 
