@@ -19,6 +19,7 @@
     pkgs.lynx
     pkgs.sxiv
     pkgs.ipfs
+    pkgs.zathura
 
     # Chat
     pkgs.discord
@@ -224,6 +225,10 @@
   };
 
   home.file.".mailcaprc".text = ''
+    image/png; sxiv %s
+    image/jpeg; sxiv %s
+    application/pdf zathura %s pdf
+
     text/html; lynx -dump %s ; copiousoutput; nametemplate=%s.html
     text/*; less
   '';
