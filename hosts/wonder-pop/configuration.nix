@@ -63,7 +63,7 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.wesl-ee = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "video" ];
+    extraGroups = [ "wheel" "video" "dialout" ];
   };
 
   powerManagement = {
