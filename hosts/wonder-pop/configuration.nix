@@ -63,7 +63,7 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.wesl-ee = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "video" "dialout" ];
+    extraGroups = [ "wheel" "video" "dialout" "uucp" "libvirtd" ];
   };
 
   powerManagement = {
@@ -85,6 +85,7 @@
     wget
     links2
     nmap
+    virt-manager
   ];
 
   programs.gnupg.agent = {
@@ -92,7 +93,8 @@
     enableSSHSupport = true;
   };
 
-  # List services that you want to enable:
+  virtualisation.libvirtd.enable = true;
+  programs.dconf.enable = true;
 
   # Enable the OpenSSH daemon.
   services.acpid.enable = true;
