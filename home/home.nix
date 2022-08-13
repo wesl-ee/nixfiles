@@ -1,5 +1,12 @@
 { config, lib, pkgs, ... }:
+let
+  sysconfig = (import <nixpkgs/nixos> {}).config;
+in
 {
+  imports = [
+    (./hosts + ("/" + sysconfig.networking.hostName + ".nix"))
+  ];
+
   home.username = "wesl-ee";
   home.homeDirectory = "/home/wesl-ee";
 
@@ -29,6 +36,8 @@
     pkgs.libnotify
     pkgs.scrot
 
+    pkgs.alacritty
+
     pkgs.pywal
 
     # coc
@@ -36,18 +45,9 @@
 
     # coc-lua
     pkgs.sumneko-lua-language-server
-
-    pkgs.terminus_font_ttf
-    pkgs.dejavu_fonts
-    pkgs.source-serif-pro
-    pkgs.noto-fonts
-    pkgs.noto-fonts-cjk
-    pkgs.noto-fonts-emoji
-    pkgs.fira-code
-    pkgs.dina-font
-    pkgs.fira-code
-    pkgs.fira-code-symbols
   ];
+
+
 
   programs.ssh = {
     enable = true;
@@ -224,6 +224,112 @@
   services.password-store-sync = {
   };
 
+  home.file.".config/alacritty/alacritty.yml".text = ''
+font:
+  normal:
+    family: xterm
+  size: 12
+schemes:
+  TomorrowNight: &TomorrowNight
+    primary:
+      background: '#1d1f21'
+      foreground: '#c5c8c6'
+    cursor:
+      text: '#1d1f21'
+      cursor: '#ffffff'
+    normal:
+      black:   '#1d1f21'
+      red:     '#cc6666'
+      green:   '#b5bd68'
+      yellow:  '#e6c547'
+      blue:    '#81a2be'
+      magenta: '#b294bb'
+      cyan:    '#70c0ba'
+      white:   '#373b41'
+    bright:
+      black:   '#666666'
+      red:     '#ff3334'
+      green:   '#9ec400'
+      yellow:  '#f0c674'
+      blue:    '#81a2be'
+      magenta: '#b77ee0'
+      cyan:    '#54ced6'
+      white:   '#282a2e'
+colors: *TomorrowNight
+  '';
+
+  home.file.".config/fontconfig/fonts.conf".text = ''
+<?xml version='1.0'?>
+<!DOCTYPE fontconfig SYSTEM 'fonts.dtd'>
+<fontconfig>
+  <alias>
+    <family>xterm</family>
+    <prefer>
+      <family>ProFont</family>
+      <family>Noto Color Emoji</family>
+      <family>Noto Sans CJK JP</family>
+    </prefer>
+  </alias>
+  <match>
+    <test name="family"><string>Arial</string></test>
+    <edit name="family" mode="assign" binding="strong">
+      <string>Arimo</string>
+    </edit>
+  </match>
+  <match>
+    <test name="family"><string>Helvetica</string></test>
+    <edit name="family" mode="assign" binding="strong">
+      <string>Arimo</string>
+    </edit>
+  </match>
+  <match>
+    <test name="family"><string>Verdana</string></test>
+    <edit name="family" mode="assign" binding="strong">
+      <string>Arimo</string>
+    </edit>
+  </match>
+  <match>
+    <test name="family"><string>Tahoma</string></test>
+    <edit name="family" mode="assign" binding="strong">
+      <string>Arimo</string>
+    </edit>
+  </match>
+  <match>
+    <test name="family"><string>Comic Sans MS</string></test>
+    <edit name="family" mode="assign" binding="strong">
+      <string>Arimo</string>
+    </edit>
+  </match>
+  <match>
+    <test name="family"><string>Times New Roman</string></test>
+    <edit name="family" mode="assign" binding="strong">
+      <string>Noto Serif</string>
+    </edit>
+  </match>
+  <match>
+    <test name="family"><string>Times</string></test>
+    <edit name="family" mode="assign" binding="strong">
+      <string>Noto Serif</string>
+    </edit>
+  </match>
+  <match>
+    <test name="family"><string>Courier New</string></test>
+    <edit name="family" mode="assign" binding="strong">
+    <string>Mononoki</string>
+    </edit>
+  </match>
+</fontconfig>
+  '';
+
+  home.file.".config/awesome".source = builtins.fetchGit {
+    url = "git@github.com:wesl-ee/awesome-wm-config.git";
+    ref = "trunk";
+  };
+  home.file.".password-store".source = builtins.fetchGit {
+    url = "w@gyw.wesl.ee:/home/w/.password-store";
+    ref = "master";
+  };
+
   home.file.".mailcaprc".text = ''
     image/png; sxiv %s
     image/jpeg; sxiv %s
@@ -316,18 +422,6 @@
     };
   };
 
-  programs.urxvt = {
-    enable = true;
-    fonts = [
-      "8x13"
-      "xft:Noto Sans CJK:style=Regular:pixelsize=18"
-      "xft:Noto Color Emoji:style=Regular:pixelsize=18"
-    ];
-    scroll.bar = {
-      floating = true;
-    };
-  };
-
   programs.git = {
     enable = true;
     userName = "Wesley Coakley";
@@ -354,53 +448,6 @@
     font = "xft: Terminus (TTF):pixelsize=20";
     pass.enable = true;
   };
-
-  xresources.extraConfig = ''
-    ! special
-    *.foreground:   #ffffff
-    *.background:   #000000
-    *.cursorColor:  #ffffff
-
-    ! black
-    *.color0:       #282a2e
-    *.color8:       #ffffff
-
-    ! red
-    *.color1:       #ff3535
-    *.color9:       #2845ff
-
-    ! green
-    *.color2:       #fff967
-    *.color10:      #1248ff
-
-    ! yellow
-    *.color3:       #ffa465
-    *.color11:      #ffffff
-
-    ! blue
-    *.color4:       #008cff
-    *.color12:      #ffffff
-
-    ! magenta
-    *.color5:       #bf00ff
-    *.color13:      #ffffff
-
-    ! cyan
-    *.color6:       #00ffde
-    *.color14:      #ffffff
-
-    ! white
-    *.color7:       #636363
-    *.color15:      #ffffff
-  '';
-#  xresources.extraConfig = builtins.readFile(
-#    pkgs.fetchFromGitHub {
-#      owner = "catppuccin";
-#      repo = "xresources";
-#      rev = "a9cd582faeef2f7410eb7d4b5a83d026e3f2b865";
-#      sha256 = "xyqXjlB6gAJiId6VrD9bWXbHQBOXlkcacfMCbeg43bk=";
-#    } + "/mocha.Xresources"
-#  );
 
   xdg.userDirs = {
     enable = true;
