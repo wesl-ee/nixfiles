@@ -18,6 +18,7 @@ in
       export PS1='\u@\h \w >\[$(tput sgr0)\] '
       export PROMPT_DIRTRIM=3
       export EDITOR=nvim
+      export IPFS_PATH="$HOME/.ipfs"
     '';
   };
 
@@ -37,6 +38,8 @@ in
     pkgs.scrot
 
     pkgs.alacritty
+    pkgs.brightnessctl
+    pkgs.xdg-user-dirs
 
     pkgs.pywal
 
@@ -83,12 +86,12 @@ in
       # Metamask
       {
         id = "nkbihfbeogaeaoehlefnkodbefgpgknn";
-        version = "10.17.0";
+        version = "10.18.0";
       }
       # Keplr
       {
         id = "dmkamcknogkgcdfhhbddcghachkejeap";
-        version = "0.10.13";
+        version = "0.10.16";
       }
       # Noscript
       {
@@ -98,7 +101,12 @@ in
       # ublock
       {
         id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";
-        version = "";
+        version = "1.43.0";
+      }
+      # Proxyswitch Omega
+      {
+        id = "padekgcemlokbadohgkifijomclgjgif";
+        version = "2.5.21";
       }
     ];
   };
@@ -452,11 +460,12 @@ colors: *TomorrowNight
   xdg.userDirs = {
     enable = true;
     videos = "$HOME/vid";
+    pictures = "$HOME/img";
     templates = "$HOME";
     publicShare = "$HOME";
     music = "$HOME/music";
     download = "$HOME/dl";
-    documents = "$HOME/dl";
+    documents = "$HOME/doc";
     desktop = "$HOME";
   };
 
