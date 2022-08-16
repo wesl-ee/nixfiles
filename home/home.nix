@@ -330,7 +330,7 @@ colors: *TomorrowNight
   '';
 
   home.file.".config/awesome".source = builtins.fetchGit {
-    url = "git@github.com:wesl-ee/awesome-wm-config.git";
+    url = "https://github.com/wesl-ee/awesome-wm-config";
     ref = "trunk";
   };
   home.file.".password-store".source = builtins.fetchGit {
