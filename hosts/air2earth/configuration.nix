@@ -24,6 +24,7 @@
   networking.wireless.enable = true;
 
   location.provider = "geoclue2";
+  hardware.bluetooth.enable = true;
   services.redshift = {
     enable = true;
     brightness = {
@@ -34,6 +35,18 @@
       day = 5500;
       night = 3700;
     };
+  };
+
+  services.avahi = {
+  nssmdns = true;
+  enable = true;
+  ipv4 = true;
+  ipv6 = true;
+  publish = {
+    enable = true;
+    addresses = true;
+    workstation = true;
+  };
   };
 
   services.xserver = {
