@@ -37,10 +37,15 @@ in
     pkgs.libnotify
     pkgs.scrot
 
+    # Cryptoshit
+    pkgs.monero-gui
+
     pkgs.alacritty
     pkgs.brightnessctl
     pkgs.xdg-user-dirs
+    pkgs.virt-manager
 
+    pkgs.jq
     pkgs.pywal
 
     # coc
@@ -107,6 +112,11 @@ in
       {
         id = "padekgcemlokbadohgkifijomclgjgif";
         version = "2.5.21";
+      }
+      # No History
+      {
+        id = "ljamgkbcojbnmcaonjokopmcblmmpfch";
+        version = "1.0.2";
       }
     ];
   };
@@ -197,8 +207,14 @@ in
             filetypes = [ "rust" ];
             root_pattern = [ "Cargo.toml" "rust-project.json" ];
           };
-        };
-        languageserver = {
+          ccls = {
+            command = "ccls";
+            filetypes = [ "c" "cpp" "objc" "objcpp" ];
+            root_pattern = [ ".ccls" "compile_commands.json" ".git" ];
+            initialization_options = {
+              cache = { directory = "/tmp/ccls"; };
+            };
+          };
         };
       };
     };
@@ -348,6 +364,8 @@ colors: *TomorrowNight
   '';
   home.file.".config/discord/settings.json".text = ''
     {
+      "MINIMIZE_TO_TRAY": false,
+      "OPEN_ON_STARTUP": false,
       "SKIP_HOST_UPDATE": true
     }
   '';
