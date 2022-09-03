@@ -226,14 +226,14 @@ in
       set number
       colorscheme default
       set mouse=
-      set termguicolors
       set tabstop=4
       set encoding=utf-8
       set shiftwidth=4
       set softtabstop=4
       set expandtab
-      highlight ExtraWhitespace ctermbg=red guibg=red
+      set termguicolors
       match ExtraWhitespace /\s\+\%#\@<!$/
+      set listchars=tab:!·,trail:·
     '';
   };
 
@@ -254,32 +254,95 @@ font:
     family: xterm
   size: 12
 schemes:
-  TomorrowNight: &TomorrowNight
-    primary:
-      background: '#1d1f21'
-      foreground: '#c5c8c6'
-    cursor:
-      text: '#1d1f21'
-      cursor: '#ffffff'
+  Metrostyle: &Metrostyle
+  # Default colors   
+    primary:     
+      background: '#fffdef'     
+      foreground: '#000000' 
+
     normal:
-      black:   '#1d1f21'
-      red:     '#cc6666'
-      green:   '#b5bd68'
-      yellow:  '#e6c547'
-      blue:    '#81a2be'
-      magenta: '#b294bb'
-      cyan:    '#70c0ba'
-      white:   '#373b41'
+      black:   '#000000'
+      red:     '#d41243'
+      green:   '#8ec127'
+      yellow:  '#f47835'
+      blue:    '#0040db'
+      magenta: '#a200ff'
+      cyan:    '#00aedb'
+      white:   '#DDDDDD'
+   
+    # Bright colors
     bright:
-      black:   '#666666'
-      red:     '#ff3334'
-      green:   '#9ec400'
-      yellow:  '#f0c674'
-      blue:    '#81a2be'
-      magenta: '#b77ee0'
-      cyan:    '#54ced6'
-      white:   '#282a2e'
-colors: *TomorrowNight
+      black:   '#888888'
+      red:     '#d41243'
+      green:   '#8ec127'
+      yellow:  '#f47835'
+      blue:    '#0040db'
+      magenta: '#a200ff'
+      cyan:    '#00aedb'
+      white:   '#FFFFFF'
+  Atom2Light: &Atom2Light
+    primary:
+      background: '0xf8f8f8'
+      foreground: '0x2a2b33'
+
+    normal:
+      black:   '0x000000'
+      red:     '0xde3d35'
+      green:   '0x3e953a'
+      yellow:  '0xd2b67b'
+      blue:    '0x2f5af3'
+      magenta: '0xa00095'
+      cyan:    '0x3e953a'
+      white:   '0xbbbbbb'
+
+    bright:
+      black:   '0x000000'
+      red:     '0xde3d35'
+      green:   '0x3e953a'
+      yellow:  '0xd2b67b'
+      blue:    '0x2f5af3'
+      magenta: '0xa00095'
+      cyan:    '0x3e953a'
+      white:   '0xffffff'
+  Breeze2: &Breeze2
+    primary:
+      background: '#232627'
+      foreground: '#fcfcfc'
+
+      dim_foreground:     '#eff0f1'
+      bright_foreground:  '#fcfcfc'
+      dim_background:     '#31363b'
+      bright_background:  '#000000'
+
+    normal:
+      black:      '#232627'
+      red:        '#ed1515'
+      green:      '#11d116'
+      yellow:     '#f67400'
+      blue:       '#1d99f3'
+      magenta:    '#9b59b6'
+      cyan:       '#00ced1'
+      white:      '#63686d'
+
+    bright:
+      black:      '#7f8c8d'
+      red:        '#ff4040'
+      green:      '#19c68a'
+      yellow:     '#fdbc4b'
+      blue:       '#3daee9'
+      magenta:    '#8e44ad'
+      cyan:       '#00ced1'
+      white:      '#808080'
+
+    dim:
+      black:      '#31363b'
+      red:        '#783228'
+      green:      '#17a262'
+      yellow:     '#b65619'
+      blue:       '#1b668f'
+      magenta:    '#614a73'
+      cyan:       '#00ffff'
+      white:      '#63686d'
   '';
 
   home.file.".config/fontconfig/fonts.conf".text = ''
