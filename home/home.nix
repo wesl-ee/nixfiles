@@ -45,6 +45,9 @@ in
     pkgs.xdg-user-dirs
     pkgs.virt-manager
 
+    # Misc
+    pkgs.xclip
+
     pkgs.jq
     pkgs.pywal
 
