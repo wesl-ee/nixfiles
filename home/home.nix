@@ -408,15 +408,6 @@ schemes:
 </fontconfig>
   '';
 
-  home.file.".config/awesome".source = builtins.fetchGit {
-    url = "https://github.com/wesl-ee/awesome-wm-config";
-    ref = "trunk";
-  };
-  home.file.".password-store".source = builtins.fetchGit {
-    url = "w@gyw.wesl.ee:/home/w/.password-store";
-    ref = "master";
-  };
-
   home.file.".mailcaprc".text = ''
     image/png; sxiv %s
     image/jpeg; sxiv %s
@@ -463,10 +454,12 @@ schemes:
       "extensions.ui.dictionary.hidden" = true;
       "extensions.ui.locale.hidden" = true;
       "extensions.ui.sitepermission.hidden" = true;
+      "gfx.webrender.enabled" = true;
       "layout.spellcheckDefault" = 0;
       "network.dns.disablePrefetch" = true;
       "network.predictor.enabled" = false;
       "network.prefetch-next" = false;
+      "media.videocontrols.picture-in-picture.enabled" = false;
       "places.history.enabled" = false;
       "privacy.donottrackheader.enabled" = true;
       "privacy.history.custom" = true;
