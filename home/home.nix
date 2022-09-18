@@ -420,6 +420,8 @@ import:
       "extensions.ui.dictionary.hidden" = true;
       "extensions.ui.locale.hidden" = true;
       "extensions.ui.sitepermission.hidden" = true;
+      "font.size.monospace.x-western" = 18;
+      "font.size.variable.x-western" = 18;
       "gfx.webrender.enabled" = true;
       "layout.spellcheckDefault" = 0;
       "network.dns.disablePrefetch" = true;
