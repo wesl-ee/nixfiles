@@ -94,12 +94,12 @@ in
       # Metamask
       {
         id = "nkbihfbeogaeaoehlefnkodbefgpgknn";
-        version = "10.18.0";
+        version = "10.18.3";
       }
       # Keplr
       {
         id = "dmkamcknogkgcdfhhbddcghachkejeap";
-        version = "0.10.16";
+        version = "0.10.22";
       }
       # Noscript
       {
@@ -109,7 +109,7 @@ in
       # ublock
       {
         id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";
-        version = "1.43.0";
+        version = "1.44.0";
       }
       # Proxyswitch Omega
       {
@@ -120,6 +120,11 @@ in
       {
         id = "ljamgkbcojbnmcaonjokopmcblmmpfch";
         version = "1.0.2";
+      }
+      # IPFS Companion
+      {
+        id = "nibjojkomfdiaoajekhjakgkdhaomnch";
+        version = "2.19.1";
       }
     ];
   };
@@ -157,14 +162,30 @@ in
       unset mark_old
       set timeout=0
 
+      set sidebar_visible
+      set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
+      set mail_check_stats
+      set sidebar_divider_char = '│'
+unset confirmappend      # don't ask, just do!
+set quit                 # don't ask, just do!!
+
+# sidebar mappings
+bind index,pager \Ck sidebar-prev
+bind index,pager \Cj sidebar-next
+bind index,pager \Co sidebar-open
+bind index,pager \Cp sidebar-prev-new
+bind index,pager \Cn sidebar-next-new
+bind index,pager B sidebar-toggle-visible
+
       set mailcap_path = ~/.mailcaprc
       auto_view text/html
     '';
   };
   accounts.email = {
-    accounts.w = {
-      address = "w@wesleycoakley.com";
-      imap.host = "hooya.org";
+    maildirBasePath = "mail";
+    accounts.levana = {
+      address = "wesley@levana.finance";
+      flavor = "gmail.com";
       mbsync = {
         enable = true;
         create = "maildir";
@@ -172,11 +193,33 @@ in
       msmtp.enable = true;
       notmuch.enable = true;
       neomutt.enable = true;
-      primary = true;
-      passwordCommand = "pass email/w@wesleycoakley.com";
-      smtp.host = "hooya.org";
+      passwordCommand = "pass crypto/levana/google-app-password";
+      imap.host = "imap.gmail.com";
+      smtp.host = "smtp.gmail.com";
       realName = "Wesley Coakley";
-      userName = "w@wesleycoakley.com";
+      userName = "wesley.coakley@levana.finance";
+    };
+    accounts.wesl-ee = {
+      address = "w@wesl.ee";
+      mbsync = {
+        enable = true;
+        create = "maildir";
+      };
+      msmtp = {
+        enable = true;
+        extraConfig = {
+          port = "587";
+          tls_starttls = "on";
+        };
+      };
+      notmuch.enable = true;
+      neomutt.enable = true;
+      primary = true;
+      passwordCommand = "pass email/w@wesl.ee";
+      imap.host = "wesl.ee";
+      smtp.host = "wesl.ee";
+      realName = "Wesley Coakley";
+      userName = "w@wesl.ee";
     };
   };
 
@@ -209,11 +252,6 @@ in
           lua = {
             command = "lua-language-server";
             filetypes = [ "lua" ];
-          };
-          rust = {
-            command = "rust-analyzer";
-            filetypes = [ "rust" ];
-            root_pattern = [ "Cargo.toml" "rust-project.json" ];
           };
           ccls = {
             command = "ccls";
@@ -435,7 +473,7 @@ import:
   programs.git = {
     enable = true;
     userName = "Wesley Coakley";
-    userEmail = "w@wesleycoakley.com";
+    userEmail = "w@wesl.ee";
     ignores = [
       "*.swap"
       ".vim"
