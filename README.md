@@ -54,11 +54,14 @@ sudo ln -sf "`pwd`/nixfiles/hosts/`hostname`/{configuration.nix,hardware-configu
 Now set up the user's awesomewm configuration and manage everything with home-manager:
 
 ```
-# Configure awesomewm
 # Misc directories
 mkdir -p ~/.config
 mkdir -p ~/img/screenshot
 
+# User scripts
+ln -s ~/nixfiles/bin ~/bin
+
+# Configure awesomewm
 mkdir -p "awesome-wm-config/themes/$(hostname)"
 touch "awesome-wm-config/themes/$(hostname)/theme.lua"
 ln -s ~/awesome-wm-config .config/awesome
@@ -73,7 +76,8 @@ ln -s ~/nixfiles/home ~/.config/nixpkgs
 home-manager switch
 ```
 
-A restart now should yield my normal desktop experience.
+Reloading the WM (`Super + Ctrl + R` is awesome's default) should now yield my
+normal desktop experience.
 
 License
 -------

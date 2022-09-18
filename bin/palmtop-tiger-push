@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+PHONE_NAME=Palmtop-Tiger
+FILE=$1
+
+# Scrape MAC address (expect that the phone is paired)
+MAC=$(bluetoothctl paired-devices | \
+    sed -n "/$PHONE_NAME/p" | \
+    sed -En 's/Device ([0-9A-F:]{17}) .*/\1/p')
+
+if [[ $MAC -eq "" ]]; then
+    echo "$PHONE_NAME not paired"
+    exit 1
+fi
+
+echo "Found $PHONE_NAME ($MAC)"
+CHANNEL=$(sdptool search --bdaddr $MAC OPUSH | \
+    sed -En 's/^\s*Channel: ([0-9]+)/\1/p')
+
+echo "Sending over channel $CHANNEL"
+obexftp --nopath --noconn --uuid none \
+    --bluetooth $MAC --channel $CHANNEL \
+    --put $FILE
+
