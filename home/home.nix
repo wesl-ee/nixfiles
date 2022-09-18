@@ -306,7 +306,7 @@ bind index,pager B sidebar-toggle-visible
 font:
   normal:
     family: xterm
-  size: 12
+  size: 9
 import:
   - ~/.config/alacritty/alacritty-theme/themes/gruvbox_light.yaml
   '';
@@ -318,7 +318,7 @@ import:
   <alias>
     <family>xterm</family>
     <prefer>
-      <family>ProFont</family>
+      <family>Hack</family>
       <family>Noto Color Emoji</family>
       <family>Noto Sans CJK JP</family>
     </prefer>
@@ -493,7 +493,7 @@ import:
 
   programs.rofi = {
     enable = true;
-    font = "xft: Terminus (TTF):pixelsize=20";
+    font = "xft: Hack";
     pass.enable = true;
   };
 

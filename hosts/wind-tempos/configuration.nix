@@ -109,7 +109,7 @@
   fonts = {
     fontDir.enable = true;
     fonts = with pkgs; [
-      profont
+      hack-font
       mononoki
       noto-fonts
       noto-fonts-cjk-serif
@@ -133,7 +133,7 @@
           "Noto Color Emoji"
         ];
         monospace = [
-          "ProFont"
+          "Hack"
           "Noto Sans CJK JP"
           "Fira Code Symbol"
           "Noto Color Emoji"
