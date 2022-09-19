@@ -269,6 +269,8 @@ bind index,pager B sidebar-toggle-visible
       };
     };
     plugins = with pkgs.vimPlugins; [
+      vim-table-mode
+      vim-markdown
       vim-nix
       coc-lua
     ];
@@ -278,6 +280,7 @@ bind index,pager B sidebar-toggle-visible
       colorscheme paper
       set mouse=
       set nowrap
+      set tw=80
       set encoding=utf-8
       set shiftwidth=4
       set softtabstop=4

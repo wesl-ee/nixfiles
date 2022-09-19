@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-$(which ikiwiki)
-if [[ $? -ne 0 ]]; then
+if ! command -v ikiwiki; then
     echo 'you should probably clone the personal-wiki repo and run `nix-shell`'
     exit 1
 fi
