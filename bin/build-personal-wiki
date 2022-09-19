@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+$(which ikiwiki)
+if [[ $? -ne 0 ]]; then
+    echo 'you should probably clone the personal-wiki repo and run `nix-shell`'
+    exit 1
+fi
+
+cd ~/writing/personal-wiki
+if [[ $(readlink -f www) != $(readlink -f "/www/local.wesl.ee") ]]; then
+    echo "personal-wiki/www/ directory is not symlink'd to /www/local.wesl.ee"
+    exit 1
+fi
+
+echo "Building wiki to /www/local.wesl.ee"
+ikiwiki --setup ./ikiwiki.setup
+if [[ $? -ne 0 ]]; then
+    echo "failed to build personal wiki to /www/local.wesl.ee"
+    exit 1
+fi
