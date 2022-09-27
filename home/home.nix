@@ -51,15 +51,13 @@ in
 
     # Misc
     pkgs.xclip
-
     pkgs.jq
-    pkgs.pywal
 
-    # coc
+    # Language server
     pkgs.nodejs
-
-    # coc-lua
+    pkgs.nodePackages.typescript
     pkgs.sumneko-lua-language-server
+    pkgs.rust-analyzer
   ];
 
 
@@ -241,58 +239,162 @@ bind index,pager B sidebar-toggle-visible
     enable = true;
     viAlias = true;
     vimAlias = true;
-    coc = {
-      enable = true;
-      settings = {
-        "rpc.enabled" = false;
-        "rpc.detailsEditing" = "{workspace_folder}";
-        "rpc.detailsViewing" = "In {workspace_folder}";
-        "rpc.showProblems" = false;
-        "suggest.noselect" = true;
-        "suggest.enablePreview" = true;
-        "suggest.enablePreselect" = false;
-        "suggest.disableKind" = true;
-        languageserver = {
-          lua = {
-            command = "lua-language-server";
-            filetypes = [ "lua" ];
-          };
-          ccls = {
-            command = "ccls";
-            filetypes = [ "c" "cpp" "objc" "objcpp" ];
-            root_pattern = [ ".ccls" "compile_commands.json" ".git" ];
-            initialization_options = {
-              cache = { directory = "/tmp/ccls"; };
-            };
-          };
-        };
-      };
-    };
-    plugins = with pkgs.vimPlugins; [
-      vim-table-mode
-      vim-markdown
-      vim-nix
-      coc-lua
-    ];
+    plugins = [ pkgs.vimPlugins.packer-nvim ];
     extraConfig = ''
-      set number
-      set termguicolors
-      colorscheme paper
-      set mouse=
-      set nowrap
-      set tw=80
-      set encoding=utf-8
-      set shiftwidth=4
-      set softtabstop=4
-      set tabstop=4
-      set expandtab
-      match ExtraWhitespace /\s\+\%#\@<!$/
-      set listchars=tab:!·,trail:·
-
-      " Reset background to terminal default
-      highlight Normal ctermbg=NONE guibg=NONE
+      lua require('config')
     '';
   };
+
+  home.file.".config/nvim/lua/config.lua".text = ''
+    require('plugins')
+
+    vim.cmd("colorscheme paper")
+    vim.cmd("let g:coq_settings = { 'auto_start': 'shut-up', 'display.pum.fast_close': v:false, 'display.icons.mode': 'none' }")
+    vim.opt.number = true
+    vim.opt.relativenumber = true
+    vim.opt.signcolumn = "yes"
+    vim.opt.termguicolors = true
+    vim.opt.mouse = ""
+    vim.opt.wrap = false
+    vim.opt.tw = 80
+    vim.opt.encoding = "utf-8"
+    vim.opt.shiftwidth = 4
+    vim.opt.softtabstop = 4
+    vim.opt.tabstop = 4
+    vim.opt.expandtab = true
+    vim.opt.listchars = "tab:!·,trail:·"
+
+    vim.api.nvim_set_hl(0, "Normal", { ctermbg=NONE, guibg=NONE })
+
+    local opts = { noremap=true, silent=true }
+    vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
+    vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
+    vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
+    vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist, opts)
+
+    -- Plugin setup
+    require('gitsigns').setup({
+      signs = {
+        add          = {hl = 'GitSignsAdd'   , text = '+', numhl='GitSignsAddNr'   , linehl='GitSignsAddLn'},
+        change       = {hl = 'GitSignsChange', text = '~', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn'},
+        delete       = {hl = 'GitSignsDelete', text = '-', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn'},
+        topdelete    = {hl = 'GitSignsDelete', text = '-', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn'},
+        changedelete = {hl = 'GitSignsChange', text = '~', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn'},
+      },
+    })
+    require('session_manager').setup({})
+
+    local lsp_status = require('lsp-status')
+    lsp_status.register_progress()
+
+    -- Use an on_attach function to only map the following keys
+    -- after the language server attaches to the current buffer
+    local on_attach = function(client, bufnr)
+      -- Enable completion triggered by <c-x><c-o>
+      vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+      -- LSP mappings
+      local bufopts = { noremap=true, silent=true, buffer=bufnr }
+      vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
+      vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+      vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+      vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
+      vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
+      vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
+      vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts)
+      vim.keymap.set('n', '<space>wl', function()
+        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+      end, bufopts)
+      vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
+      vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
+      vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
+      vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
+      vim.keymap.set('n', '<space>f', vim.lsp.buf.formatting, bufopts)
+
+      -- Status line
+      lsp_status.on_attach(client)
+    end
+
+    local lsp = require "lspconfig"
+    local coq = require "coq"
+    local opts = {
+      on_attach = on_attach,
+    }
+
+    -- LSP config
+    lsp.rust_analyzer.setup(coq.lsp_ensure_capabilities({
+      on_attach = on_attach,
+    }))
+    lsp.pyright.setup(coq.lsp_ensure_capabilities({
+      on_attach = on_attach,
+    }))
+    lsp.tsserver.setup(coq.lsp_ensure_capabilities({
+      on_attach = on_attach,
+    }))
+    lsp.sumneko_lua.setup(coq.lsp_ensure_capabilities({
+      on_attach = on_attach,
+      settings = {
+        Lua = {
+          runtime = {
+            -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+            version = 'LuaJIT',
+          },
+          diagnostics = {
+            -- Get the language server to recognize the `vim` global
+            globals = {'vim'},
+          },
+          workspace = {
+            -- Make the server aware of Neovim runtime files
+            library = vim.api.nvim_get_runtime_file("", true),
+          },
+          -- Do not send telemetry data containing a randomized but unique identifier
+          telemetry = {
+            enable = false,
+          },
+        },
+      },
+    }))
+
+  '';
+
+  home.file.".config/nvim/lua/plugins.lua".text = ''
+    local use = require('packer').use
+
+    return require('packer').startup(function(use)
+      -- Configurations for Nvim LSP
+      use 'neovim/nvim-lspconfig' 
+
+      -- Status bar
+      use 'nvim-lua/lsp-status.nvim'
+
+      -- Gitsigns
+      use {
+        'lewis6991/gitsigns.nvim'
+      }
+
+      -- Completion
+      use {
+        'ms-jpq/coq_nvim', branch = 'coq'
+      }
+
+      -- Session manager
+      use {
+        'Shatur/neovim-session-manager',
+        requires = {{'nvim-lua/plenary.nvim', opt = true}}
+      }
+
+      use {
+        'nvim-lua/plenary.nvim'
+      }
+
+      use {
+        'ms-jpq/coq.artifacts', branch = 'artifacts'
+      }
+
+      -- Discord rich presence
+      use 'andweeb/presence.nvim'
+    end)
+  '';
 
   programs.password-store = {
     enable = true;
@@ -328,6 +430,8 @@ import:
       <family>Hack</family>
       <family>Noto Color Emoji</family>
       <family>Noto Sans CJK JP</family>
+      <family>PowerlineSymbols</family>
+      <family>Weather Icons</family>
     </prefer>
   </alias>
   <match>
@@ -516,6 +620,12 @@ import:
     download = "$HOME/dl";
     documents = "$HOME/doc";
     desktop = "$HOME";
+  };
+
+  services.screen-locker = {
+    enable = true;
+    xautolock.enable = true;
+    lockCmd = "\${pkgs.lightdm}/bin/dm-tool lock";
   };
 
   services.gpg-agent = {

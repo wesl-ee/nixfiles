@@ -119,6 +119,8 @@
     fonts = with pkgs; [
       hack-font
       mononoki
+      weather-icons
+      powerline-symbols
       noto-fonts
       noto-fonts-cjk-serif
       noto-fonts-cjk-sans
