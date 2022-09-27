@@ -58,6 +58,7 @@ in
     pkgs.nodePackages.typescript
     pkgs.sumneko-lua-language-server
     pkgs.rust-analyzer
+    pkgs.rnix-lsp
   ];
 
 
@@ -329,6 +330,9 @@ bind index,pager B sidebar-toggle-visible
       on_attach = on_attach,
     }))
     lsp.tsserver.setup(coq.lsp_ensure_capabilities({
+      on_attach = on_attach,
+    }))
+    lsp.rnix.setup(coq.lsp_ensure_capabilities({
       on_attach = on_attach,
     }))
     lsp.sumneko_lua.setup(coq.lsp_ensure_capabilities({
