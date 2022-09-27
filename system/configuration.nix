@@ -3,26 +3,13 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:
-
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # System-specific configuration (ie per-host)
+    /etc/nixos/host.nix
+  ];
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  boot.initrd.luks.devices = {
-    luksroot = {
-      device = "/dev/nvme0n1p2";
-    };
-  };
-
-  networking.hostName = "wind-tempos";
-  networking.wireless.enable = true;
-
+  # Redshift for automatic temperature adjustment
   location.provider = "geoclue2";
   services.redshift = {
     enable = true;
@@ -36,28 +23,15 @@
     };
   };
 
+  # xorg + Awesome WM
   services.xserver = {
     enable = true;
     displayManager.defaultSession = "none+awesome";
-
-    windowManager.awesome = {
-      enable = true;
-    };
-
+    windowManager.awesome.enable = true;
     libinput.enable = true;
-    wacom.enable = true;
+  };
 
-    videoDrivers = [ "intel" ];
-    deviceSection = ''
-      Option "TearFree" "true"
-      Option "AccelMethod" "sna"
-    '';
-    dpi = 162;
-  };
-  environment.variables = {
-    GDK_SCALE = "2";
-    GDK_DPI_SCALE = "0.5";
-  };
+  # Run IPFS on every machine
   services.ipfs.enable = true;
 
   time.timeZone = "US/Eastern";
@@ -67,20 +41,7 @@
 
   users.users.wesl-ee = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "video" ];
-  };
-
-  powerManagement = {
-    enable = true;
-    powertop.enable = true;
-  };
-
-  services.tlp = {
-    enable = true;
-    extraConfig = ''
-      CPU_SCALING_GOVERNOR_ON_BAT=powersave
-      ENERGY_PERF_POLICY_ON_BAT=powersave
-    '';
+    extraGroups = [ "wheel" "video" "dialout" "uucp" ];
   };
 
   environment.systemPackages = with pkgs; [
@@ -99,18 +60,13 @@
 
   programs.dconf.enable = true;
 
-  # Enable the OpenSSH daemon.
-  services.acpid.enable = true;
-
-  nixpkgs.config.packageOverrides = pkgs: {
-    vaapiIntel = pkgs.vaapiIntel.override { enableHybridCodec = true; };
-  };
-
   fonts = {
     fontDir.enable = true;
     fonts = with pkgs; [
       hack-font
       mononoki
+      weather-icons
+      powerline-symbols
       noto-fonts
       noto-fonts-cjk-serif
       noto-fonts-cjk-sans
@@ -142,27 +98,34 @@
     };
   };
 
-  hardware.opengl = {
+  # Personal wiki
+  services.nginx = {
     enable = true;
-    extraPackages = with pkgs; [
-      intel-media-driver # LIBVA_DRIVER_NAME=iHD
-      vaapiIntel         # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
-      vaapiVdpau
-      libvdpau-va-gl
-    ];
+    virtualHosts."local.wesl.ee" = {
+      root = "/www/local.wesl.ee";
+    };
   };
 
+  networking.extraHosts =
+  ''
+    # Personal wiki (local build)
+    127.0.0.1 local.wesl.ee
+  '';
 
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
+  # Chromecast discoverability
+  services.avahi = {
+    nssmdns = true;
+    enable = true;
+    ipv4 = true;
+    ipv6 = true;
+    publish = {
+      enable = true;
+      addresses = true;
+      workstation = true;
+    };
+  };
 
-  # Copy the NixOS configuration file and link it from the resulting system
-  # (/run/current-system/configuration.nix). This is useful in case you
-  # accidentally delete configuration.nix.
-  # system.copySystemConfiguration = true;
+  system.copySystemConfiguration = true;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

@@ -46,9 +46,9 @@ Now copy the configuration files derived during install and add them to this rep
 
 ```
 # Mirror system configuration to this repo
-mkdir -p "nixfiles/hosts/$(hostname)"
-cp /etc/nixos/{configuration.nix,hardware-configuration.nix} "nixfiles/hosts/$(hostname)"
-sudo ln -sf "`pwd`/nixfiles/hosts/`hostname`/{configuration.nix,hardware-configuration.nix}" /etc/nixos/
+touch "nixfiles/system/hosts/$(hostname).nix"
+sudo ln -sf "`pwd`/nixfiles/system/configuration.nix" /etc/nixos/
+sudo ln -sf "`pwd`/nixfiles/system/hosts/`hostname`.nix" /etc/nixos/host.nix
 ```
 
 Now set up the user's awesomewm configuration and manage everything with home-manager:
