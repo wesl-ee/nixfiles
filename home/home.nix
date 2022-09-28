@@ -35,7 +35,6 @@ in
 
     # Chat
     pkgs.discord
-    pkgs.discord-rpc
     pkgs.slack
 
     pkgs.libnotify
@@ -58,6 +57,7 @@ in
     pkgs.nodePackages.typescript
     pkgs.sumneko-lua-language-server
     pkgs.rust-analyzer
+    pkgs.ripgrep
     pkgs.rnix-lsp
   ];
 
@@ -134,8 +134,7 @@ in
 
   services.dunst = {
     enable = true;
-    settings = {
-    };
+    settings = { };
   };
 
   programs.gpg = {
@@ -169,16 +168,16 @@ in
       set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
       set mail_check_stats
       set sidebar_divider_char = '│'
-unset confirmappend      # don't ask, just do!
-set quit                 # don't ask, just do!!
+      unset confirmappend      # don't ask, just do!
+      set quit                 # don't ask, just do!!
 
-# sidebar mappings
-bind index,pager \Ck sidebar-prev
-bind index,pager \Cj sidebar-next
-bind index,pager \Co sidebar-open
-bind index,pager \Cp sidebar-prev-new
-bind index,pager \Cn sidebar-next-new
-bind index,pager B sidebar-toggle-visible
+      # sidebar mappings
+      bind index,pager \Ck sidebar-prev
+      bind index,pager \Cj sidebar-next
+      bind index,pager \Co sidebar-open
+      bind index,pager \Cp sidebar-prev-new
+      bind index,pager \Cn sidebar-next-new
+      bind index,pager B sidebar-toggle-visible
 
       set mailcap_path = ~/.mailcaprc
       auto_view text/html
@@ -232,9 +231,9 @@ bind index,pager B sidebar-toggle-visible
   };
 
   home.file.".config/nvim/colors/paper.vim".source = builtins.fetchGit {
-    url = "https://gitlab.com/yorickpeterse/vim-paper.git";
-    ref = "master";
-  } + "/colors/paper.vim";
+      url = "https://gitlab.com/yorickpeterse/vim-paper.git";
+      ref = "master";
+    } + "/colors/paper.vim";
 
   programs.neovim = {
     enable = true;
@@ -250,6 +249,8 @@ bind index,pager B sidebar-toggle-visible
     require('plugins')
 
     vim.cmd("colorscheme paper")
+    vim.cmd("hi clear SignColumn")
+    vim.api.nvim_set_hl(0, "Normal", { ctermbg=NONE, guibg=NONE })
     vim.cmd("let g:coq_settings = { 'auto_start': 'shut-up', 'display.pum.fast_close': v:false, 'display.icons.mode': 'none' }")
     vim.opt.number = true
     vim.opt.relativenumber = true
@@ -263,15 +264,17 @@ bind index,pager B sidebar-toggle-visible
     vim.opt.softtabstop = 4
     vim.opt.tabstop = 4
     vim.opt.expandtab = true
+    vim.g.mapleader = " "
     vim.opt.listchars = "tab:!·,trail:·"
-
-    vim.api.nvim_set_hl(0, "Normal", { ctermbg=NONE, guibg=NONE })
+    vim.cmd("hi NonText ctermfg=7 guifg=gray")
+    vim.opt.list = true
 
     local opts = { noremap=true, silent=true }
-    vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
+    vim.keymap.set('n', '<Leader>w', ':write<CR>')
+    vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, opts)
     vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
     vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
-    vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist, opts)
+    vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, opts)
 
     -- Plugin setup
     require('gitsigns').setup({
@@ -283,7 +286,36 @@ bind index,pager B sidebar-toggle-visible
         changedelete = {hl = 'GitSignsChange', text = '~', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn'},
       },
     })
-    require('session_manager').setup({})
+
+    require("sessions").setup({
+      session_filepath = ".nvim/session",
+    })
+    require("workspaces").setup({
+        hooks = {
+            open = function()
+              require("sessions").load(nil, { silent = true })
+            end,
+        }
+    })
+    require('lualine').setup({ options = {
+      theme = 'papercolor_light',
+      icons_enabled = false
+    }})
+    require('presence'):setup({
+        auto_update = true,
+        neovim_image_text = "Neovim",
+        main_image = "file",
+        buttons = false,
+        show_time = true,
+    })
+    require("telescope").setup({})
+    require("telescope").load_extension("workspaces")
+    vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files)
+    vim.keymap.set('n', '<leader>fg', require('telescope.builtin').live_grep)
+    vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers)
+    vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
+    vim.keymap.set('n', '<leader>fr', require('telescope.builtin').lsp_references)
+    vim.keymap.set('n', '<leader>fw', ':Telescope workspaces<cr>')
 
     local lsp_status = require('lsp-status')
     lsp_status.register_progress()
@@ -301,16 +333,11 @@ bind index,pager B sidebar-toggle-visible
       vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
       vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
       vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
-      vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
-      vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts)
-      vim.keymap.set('n', '<space>wl', function()
-        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-      end, bufopts)
-      vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
-      vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
-      vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
+      vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, bufopts)
+      vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
+      vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
+      vim.keymap.set('n', '<space>m', vim.lsp.buf.formatting, bufopts)
       vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-      vim.keymap.set('n', '<space>f', vim.lsp.buf.formatting, bufopts)
 
       -- Status line
       lsp_status.on_attach(client)
@@ -358,7 +385,6 @@ bind index,pager B sidebar-toggle-visible
         },
       },
     }))
-
   '';
 
   home.file.".config/nvim/lua/plugins.lua".text = ''
@@ -381,14 +407,14 @@ bind index,pager B sidebar-toggle-visible
         'ms-jpq/coq_nvim', branch = 'coq'
       }
 
-      -- Session manager
+      -- Workspaces
       use {
-        'Shatur/neovim-session-manager',
-        requires = {{'nvim-lua/plenary.nvim', opt = true}}
+        'natecraddock/workspaces.nvim',
       }
 
+      -- Sessions
       use {
-        'nvim-lua/plenary.nvim'
+        'natecraddock/sessions.nvim',
       }
 
       use {
@@ -397,96 +423,105 @@ bind index,pager B sidebar-toggle-visible
 
       -- Discord rich presence
       use 'andweeb/presence.nvim'
+
+      use {
+        'nvim-telescope/telescope.nvim', tag = '0.1.0',
+        requires = { {'nvim-lua/plenary.nvim'} }
+      }
+
+      use {
+        'nvim-lualine/lualine.nvim',
+        requires = { 'kyazdani42/nvim-web-devicons', opt = true }
+      }
     end)
   '';
 
   programs.password-store = {
     enable = true;
     settings = {
-      PASSWORD_STORE_KEY="1068A429B387E62C";
-      PASSWORD_STORE_DIR="~/.password-store";
+      PASSWORD_STORE_KEY = "1068A429B387E62C";
+      PASSWORD_STORE_DIR = "~/.password-store";
     };
   };
 
-  services.password-store-sync = {
-  };
+  services.password-store-sync = { };
 
   home.file.".config/alacritty/alacritty-theme".source = builtins.fetchGit {
     url = "https://github.com/eendroroy/alacritty-theme.git";
     ref = "master";
   };
   home.file.".config/alacritty/alacritty.yml".text = ''
-font:
-  normal:
-    family: xterm
-  size: 9
-import:
-  - ~/.config/alacritty/alacritty-theme/themes/gruvbox_light.yaml
+    font:
+      normal:
+        family: xterm
+      size: 9
+    import:
+      - ~/.config/alacritty/alacritty-theme/themes/gruvbox_light.yaml
   '';
 
   home.file.".config/fontconfig/fonts.conf".text = ''
-<?xml version='1.0'?>
-<!DOCTYPE fontconfig SYSTEM 'fonts.dtd'>
-<fontconfig>
-  <alias>
-    <family>xterm</family>
-    <prefer>
-      <family>Hack</family>
-      <family>Noto Color Emoji</family>
-      <family>Noto Sans CJK JP</family>
-      <family>PowerlineSymbols</family>
-      <family>Weather Icons</family>
-    </prefer>
-  </alias>
-  <match>
-    <test name="family"><string>Arial</string></test>
-    <edit name="family" mode="assign" binding="strong">
-      <string>Arimo</string>
-    </edit>
-  </match>
-  <match>
-    <test name="family"><string>Helvetica</string></test>
-    <edit name="family" mode="assign" binding="strong">
-      <string>Arimo</string>
-    </edit>
-  </match>
-  <match>
-    <test name="family"><string>Verdana</string></test>
-    <edit name="family" mode="assign" binding="strong">
-      <string>Arimo</string>
-    </edit>
-  </match>
-  <match>
-    <test name="family"><string>Tahoma</string></test>
-    <edit name="family" mode="assign" binding="strong">
-      <string>Arimo</string>
-    </edit>
-  </match>
-  <match>
-    <test name="family"><string>Comic Sans MS</string></test>
-    <edit name="family" mode="assign" binding="strong">
-      <string>Arimo</string>
-    </edit>
-  </match>
-  <match>
-    <test name="family"><string>Times New Roman</string></test>
-    <edit name="family" mode="assign" binding="strong">
-      <string>Noto Serif</string>
-    </edit>
-  </match>
-  <match>
-    <test name="family"><string>Times</string></test>
-    <edit name="family" mode="assign" binding="strong">
-      <string>Noto Serif</string>
-    </edit>
-  </match>
-  <match>
-    <test name="family"><string>Courier New</string></test>
-    <edit name="family" mode="assign" binding="strong">
-    <string>Mononoki</string>
-    </edit>
-  </match>
-</fontconfig>
+    <?xml version='1.0'?>
+    <!DOCTYPE fontconfig SYSTEM 'fonts.dtd'>
+    <fontconfig>
+      <alias>
+        <family>xterm</family>
+        <prefer>
+          <family>Hack</family>
+          <family>Noto Color Emoji</family>
+          <family>Noto Sans CJK JP</family>
+          <family>PowerlineSymbols</family>
+          <family>Weather Icons</family>
+        </prefer>
+      </alias>
+      <match>
+        <test name="family"><string>Arial</string></test>
+        <edit name="family" mode="assign" binding="strong">
+          <string>Arimo</string>
+        </edit>
+      </match>
+      <match>
+        <test name="family"><string>Helvetica</string></test>
+        <edit name="family" mode="assign" binding="strong">
+          <string>Arimo</string>
+        </edit>
+      </match>
+      <match>
+        <test name="family"><string>Verdana</string></test>
+        <edit name="family" mode="assign" binding="strong">
+          <string>Arimo</string>
+        </edit>
+      </match>
+      <match>
+        <test name="family"><string>Tahoma</string></test>
+        <edit name="family" mode="assign" binding="strong">
+          <string>Arimo</string>
+        </edit>
+      </match>
+      <match>
+        <test name="family"><string>Comic Sans MS</string></test>
+        <edit name="family" mode="assign" binding="strong">
+          <string>Arimo</string>
+        </edit>
+      </match>
+      <match>
+        <test name="family"><string>Times New Roman</string></test>
+        <edit name="family" mode="assign" binding="strong">
+          <string>Noto Serif</string>
+        </edit>
+      </match>
+      <match>
+        <test name="family"><string>Times</string></test>
+        <edit name="family" mode="assign" binding="strong">
+          <string>Noto Serif</string>
+        </edit>
+      </match>
+      <match>
+        <test name="family"><string>Courier New</string></test>
+        <edit name="family" mode="assign" binding="strong">
+        <string>Mononoki</string>
+        </edit>
+      </match>
+    </fontconfig>
   '';
 
   home.file.".mailcaprc".text = ''
@@ -506,86 +541,84 @@ import:
   '';
 
   programs.firefox = let common-settings = {
-      "browser.startup.homepage" = "https://wesl.ee/";
-      "app.shield.optoutstudies.enabled" = false;
-      "browser.contentblocking.category" = "standard";
-      "browser.download.autohideButton" = false;
-      "browser.formfill.enable" = false;
-      "browser.newtabpage.enabled" = false;
-      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons" = false;
-      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features" = false;
-      "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
-      "browser.newtabpage.activity-stream.feeds.topsites" = false;
-      "browser.newtabpage.activity-stream.showSearch" = false;
-      "browser.safebrowsing.malware.enabled" = false;
-      "browser.safebrowsing.phishing.enabled" = false;
-      "browser.search.region" = "US";
-      "browser.search.suggest.enabled" = false;
-      "browser.urlbar.suggest.history" = false;
-      "browser.urlbar.suggest.quicksuggest.nonsponsored" = false;
-      "browser.urlbar.suggest.quicksuggest.sponsored" = false;
-      "browser.urlbar.suggest.searches" = false;
-      "browser.urlbar.suggest.topsites" = false;
-      "datareporting.healthreport.uploadEnabled" = false;
-      "dom.security.https_only_mode" = true;
-      "dom.security.https_only_mode_ever_enabled" = true;
-      "extensions.formautofill.addresses.enabled" = false;
-      "extensions.formautofill.creditCards.enabled" = false;
-      "extensions.pictureinpicture.enable_picture_in_picture_overrides" = true;
-      "extensions.ui.dictionary.hidden" = true;
-      "extensions.ui.locale.hidden" = true;
-      "extensions.ui.sitepermission.hidden" = true;
-      "font.size.monospace.x-western" = 12;
-      "font.size.variable.x-western" = 12;
-      "gfx.webrender.enabled" = true;
-      "layout.spellcheckDefault" = 0;
-      "network.dns.disablePrefetch" = true;
-      "network.predictor.enabled" = false;
-      "network.prefetch-next" = false;
-      "media.videocontrols.picture-in-picture.enabled" = false;
-      "places.history.enabled" = false;
-      "privacy.donottrackheader.enabled" = true;
-      "privacy.history.custom" = true;
-      "privacy.userContext.enabled" = true;
-      "trailhead.firstrun.didSeeAboutWelcome" = true;
-      "toolkit.telemetry.reportingpolicy.firstRun" = false;
-      "toolkit.telemetry.pioneer-new-studies-available" = false;
-      "signon.rememberSignons" = false;
-      "services.sync.engine.history" = false;
-    }; in {
-    enable = true;
-    extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-      noscript
-      startpage-private-search
-      ublock-origin
-      cookie-autodelete
-      ipfs-companion
-      user-agent-string-switcher
-    ];
-    profiles = {
-      browse = {
-	    id = 0;
-        bookmarks = {
-          "Home Manager Config Options" = {
-            url = "https://rycee.gitlab.io/home-manager/options.html";
+    "browser.startup.homepage" = "https://wesl.ee/";
+    "app.shield.optoutstudies.enabled" = false;
+    "browser.contentblocking.category" = "standard";
+    "browser.download.autohideButton" = false;
+    "browser.formfill.enable" = false;
+    "browser.newtabpage.enabled" = false;
+    "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons" = false;
+    "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features" = false;
+    "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
+    "browser.newtabpage.activity-stream.feeds.topsites" = false;
+    "browser.newtabpage.activity-stream.showSearch" = false;
+    "browser.safebrowsing.malware.enabled" = false;
+    "browser.safebrowsing.phishing.enabled" = false;
+    "browser.search.region" = "US";
+    "browser.search.suggest.enabled" = false;
+    "browser.urlbar.suggest.history" = false;
+    "browser.urlbar.suggest.quicksuggest.nonsponsored" = false;
+    "browser.urlbar.suggest.quicksuggest.sponsored" = false;
+    "browser.urlbar.suggest.searches" = false;
+    "browser.urlbar.suggest.topsites" = false;
+    "datareporting.healthreport.uploadEnabled" = false;
+    "dom.security.https_only_mode" = true;
+    "dom.security.https_only_mode_ever_enabled" = true;
+    "extensions.formautofill.addresses.enabled" = false;
+    "extensions.formautofill.creditCards.enabled" = false;
+    "extensions.pictureinpicture.enable_picture_in_picture_overrides" = true;
+    "extensions.ui.dictionary.hidden" = true;
+    "extensions.ui.locale.hidden" = true;
+    "extensions.ui.sitepermission.hidden" = true;
+    "font.size.monospace.x-western" = 12;
+    "font.size.variable.x-western" = 12;
+    "gfx.webrender.enabled" = true;
+    "layout.spellcheckDefault" = 0;
+    "network.dns.disablePrefetch" = true;
+    "network.predictor.enabled" = false;
+    "network.prefetch-next" = false;
+    "media.videocontrols.picture-in-picture.enabled" = false;
+    "places.history.enabled" = false;
+    "privacy.donottrackheader.enabled" = true;
+    "privacy.history.custom" = true;
+    "privacy.userContext.enabled" = true;
+    "trailhead.firstrun.didSeeAboutWelcome" = true;
+    "toolkit.telemetry.reportingpolicy.firstRun" = false;
+    "toolkit.telemetry.pioneer-new-studies-available" = false;
+    "signon.rememberSignons" = false;
+    "services.sync.engine.history" = false;
+  }; in
+    {
+      enable = true;
+      extensions = with pkgs.nur.repos.rycee.firefox-addons; [
+        noscript
+        startpage-private-search
+        ublock-origin
+        cookie-autodelete
+        ipfs-companion
+        user-agent-string-switcher
+      ];
+      profiles = {
+        browse = {
+          id = 0;
+          bookmarks = {
+            "Home Manager Config Options" = {
+              url = "https://rycee.gitlab.io/home-manager/options.html";
+            };
+            "NixOS Packages" = {
+              url = "https://search.nixos.org/";
+              keyword = "@nixos";
+            };
           };
-          "NixOS Packages" = {
-            url = "https://search.nixos.org/";
-            keyword = "@nixos";
-          };
-	    };
-        settings = pkgs.lib.recursiveUpdate common-settings {
+          settings = pkgs.lib.recursiveUpdate common-settings { };
         };
-      };
-      levana = {
-        id = 1;
-        bookmarks = {
-	    };
-        settings = pkgs.lib.recursiveUpdate common-settings {
+        levana = {
+          id = 1;
+          bookmarks = { };
+          settings = pkgs.lib.recursiveUpdate common-settings { };
         };
       };
     };
-  };
 
   programs.git = {
     enable = true;
@@ -594,6 +627,7 @@ import:
     ignores = [
       "*.swap"
       ".vim"
+      ".nvim"
     ];
     delta.enable = true;
     lfs.enable = true;
@@ -601,9 +635,9 @@ import:
     extraConfig = {
       init = {
         core = {
-	  whitespace = "trailing-space,space-before-tab";
-	};
-	defaultBranch = "trunk";
+          whitespace = "trailing-space,space-before-tab";
+        };
+        defaultBranch = "trunk";
       };
     };
   };
