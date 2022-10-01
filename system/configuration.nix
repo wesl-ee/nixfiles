@@ -41,7 +41,7 @@
 
   users.users.wesl-ee = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "video" "dialout" "uucp" ];
+    extraGroups = [ "wheel" "video" "dialout" "uucp" "docker" ];
   };
 
   environment.systemPackages = with pkgs; [
@@ -59,6 +59,7 @@
   };
 
   programs.dconf.enable = true;
+  virtualisation.docker.enable = true;
 
   fonts = {
     fontDir.enable = true;

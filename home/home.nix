@@ -23,6 +23,10 @@ in
       export PROMPT_DIRTRIM=3
       export EDITOR=nvim
       export IPFS_PATH="$HOME/.ipfs"
+      alias workspace-optimize="docker run --rm -v "$(pwd)":/code \
+        --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+        --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+        cosmwasm/workspace-optimizer:0.12.8"
     '';
   };
 
