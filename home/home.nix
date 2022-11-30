@@ -7,10 +7,10 @@ in
     (./hosts + ("/" + sysconfig.networking.hostName + ".nix"))
   ];
 
+  fonts.fontconfig.enable = true;
+
   home.username = "wesl-ee";
   home.homeDirectory = "/home/wesl-ee";
-
-  fonts.fontconfig.enable = true;
 
   home.sessionPath = [
     "$HOME/bin"
@@ -47,10 +47,17 @@ in
     # Cryptoshit
     pkgs.monero-gui
 
+    pkgs.tdesktop
+    pkgs.inkscape
     pkgs.alacritty
     pkgs.brightnessctl
     pkgs.xdg-user-dirs
     pkgs.virt-manager
+    pkgs.maxima
+
+    # DJ shit
+    pkgs.mixxx
+    pkgs.nicotine-plus
 
     # Misc
     pkgs.xclip
@@ -63,6 +70,7 @@ in
     pkgs.rust-analyzer
     pkgs.ripgrep
     pkgs.rnix-lsp
+    pkgs.ccls
   ];
 
 
@@ -133,6 +141,11 @@ in
         id = "nibjojkomfdiaoajekhjakgkdhaomnch";
         version = "2.19.1";
       }
+      # xdefi
+      {
+        id = "hmeobnfnfcmdkdcmlblgagmfpfboieaf";
+        version = "21.1.8";
+      }
     ];
   };
 
@@ -189,22 +202,6 @@ in
   };
   accounts.email = {
     maildirBasePath = "mail";
-    accounts.levana = {
-      address = "wesley@levana.finance";
-      flavor = "gmail.com";
-      mbsync = {
-        enable = true;
-        create = "maildir";
-      };
-      msmtp.enable = true;
-      notmuch.enable = true;
-      neomutt.enable = true;
-      passwordCommand = "pass crypto/levana/google-app-password";
-      imap.host = "imap.gmail.com";
-      smtp.host = "smtp.gmail.com";
-      realName = "Wesley Coakley";
-      userName = "wesley.coakley@levana.finance";
-    };
     accounts.wesl-ee = {
       address = "w@wesl.ee";
       mbsync = {
@@ -213,6 +210,7 @@ in
       };
       msmtp = {
         enable = true;
+        tls.fingerprint = "EC:C3:E6:C5:61:C7:45:9D:59:06:50:52:4C:81:9B:90:66:63:24:C1:72:AB:FB:BD:E2:A4:D7:4F:AA:EB:DF:EA";
         extraConfig = {
           port = "587";
           tls_starttls = "on";
@@ -366,6 +364,7 @@ in
     lsp.rnix.setup(coq.lsp_ensure_capabilities({
       on_attach = on_attach,
     }))
+    lsp.ccls.setup{}
     lsp.sumneko_lua.setup(coq.lsp_ensure_capabilities({
       on_attach = on_attach,
       settings = {
@@ -635,7 +634,6 @@ in
     ];
     delta.enable = true;
     lfs.enable = true;
-    signing.key = "361FD33468D04DCE";
     extraConfig = {
       init = {
         core = {
