@@ -7,6 +7,8 @@
   imports = [
     # System-specific configuration (ie per-host)
     /etc/nixos/host.nix
+    # System users
+    /etc/nixos/users.nix
   ];
 
   # Redshift for automatic temperature adjustment
@@ -39,14 +41,10 @@
   sound.enable = true;
   hardware.pulseaudio.enable = true;
 
-  users.users.wesl-ee = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "video" "dialout" "uucp" "docker" ];
-  };
-
   environment.systemPackages = with pkgs; [
     neovim
     acpi
+    pavucontrol
     wget
     links2
     nmap
@@ -124,6 +122,10 @@
       addresses = true;
       workstation = true;
     };
+  };
+
+  networking.firewall = {
+    allowedUDPPorts = [ 51820 ];
   };
 
   system.copySystemConfiguration = true;
