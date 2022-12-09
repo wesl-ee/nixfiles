@@ -253,13 +253,13 @@ in
     vim.cmd("colorscheme paper")
     vim.cmd("hi clear SignColumn")
     vim.api.nvim_set_hl(0, "Normal", { ctermbg=NONE, guibg=NONE })
-    vim.cmd("let g:coq_settings = { 'auto_start': 'shut-up', 'display.pum.fast_close': v:false, 'display.icons.mode': 'none' }")
     vim.opt.number = true
     vim.opt.relativenumber = true
     vim.opt.signcolumn = "yes"
     vim.opt.termguicolors = true
     vim.opt.mouse = ""
     vim.opt.wrap = false
+    vim.opt.completeopt = {'menu', 'menuone', 'noselect'}
     vim.opt.tw = 80
     vim.opt.encoding = "utf-8"
     vim.opt.shiftwidth = 4
@@ -307,7 +307,7 @@ in
         auto_update = true,
         neovim_image_text = "Neovim",
         main_image = "file",
-        buttons = false,
+        buttons = true,
         show_time = true,
     })
     require("telescope").setup({})
@@ -326,7 +326,7 @@ in
     -- after the language server attaches to the current buffer
     local on_attach = function(client, bufnr)
       -- Enable completion triggered by <c-x><c-o>
-      vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+      -- vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
       -- LSP mappings
       local bufopts = { noremap=true, silent=true, buffer=bufnr }
@@ -338,7 +338,7 @@ in
       vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, bufopts)
       vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
       vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
-      vim.keymap.set('n', '<space>m', vim.lsp.buf.formatting, bufopts)
+      vim.keymap.set('n', '<leader>m', vim.lsp.buf.formatting, bufopts)
       vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
 
       -- Status line
@@ -346,26 +346,170 @@ in
     end
 
     local lsp = require "lspconfig"
-    local coq = require "coq"
+    local cmp = require'cmp'
     local opts = {
       on_attach = on_attach,
     }
 
+    local lspkind_comparator = function(conf)
+      local lsp_types = require('cmp.types').lsp
+      return function(entry1, entry2)
+        if entry1.source.name ~= 'nvim_lsp' then
+          if entry2.source.name == 'nvim_lsp' then
+            return false
+          else
+            return nil
+          end
+        end
+        local kind1 = lsp_types.CompletionItemKind[entry1:get_kind()]
+        local kind2 = lsp_types.CompletionItemKind[entry2:get_kind()]
+  
+        local priority1 = conf.kind_priority[kind1] or 0
+        local priority2 = conf.kind_priority[kind2] or 0
+        if priority1 == priority2 then
+          return nil
+        end
+        return priority2 < priority1
+      end
+    end
+
+    local label_comparator = function(entry1, entry2)
+      return entry1.completion_item.label < entry2.completion_item.label
+    end
+
+     cmp.setup({
+      preselect = cmp.PreselectMode.None,
+      -- enabled = function()
+      --   -- disable completion if the cursor is `Comment` syntax group.
+      --   return not cmp.config.context.in_syntax_group('Comment')
+      -- end,
+      snippet = {
+        -- REQUIRED - you must specify a snippet engine
+        expand = function(args)
+          vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
+        end,
+      },
+      formatting = {
+        format = function(entry, vim_item)
+          local label = vim_item.abbr
+          local truncated_label = vim.fn.strcharpart(label, 0, 30)
+          if truncated_label ~= label then
+            vim_item.abbr = truncated_label .. '…'
+          end
+          local kind = vim_item.kind
+          local truncated_kind = vim.fn.strcharpart(kind, 0, 15)
+          if truncated_kind ~= kind then
+            vim_item.kind = truncated_kind .. '…'
+          end
+          local menu = vim_item.menu
+          local truncated_menu = vim.fn.strcharpart(menu, 0, 15)
+          if truncated_menu ~= menu then
+            vim_item.menu = truncated_menu .. '…'
+          end
+          return vim_item
+        end
+      },
+      window = {
+        completion = {
+          border = 'rounded',
+          pumheight = 30,
+        },
+        documentation = {
+          max_width = 40,
+          max_height = 30,
+          border = 'rounded',
+        },
+        formatting = {
+          fields = {'menu', 'abbr', 'kind'}
+        },
+      },
+      mapping = cmp.mapping.preset.insert({
+        ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+        ['<C-f>'] = cmp.mapping.scroll_docs(4),
+        ['<C-n>'] = cmp.mapping(cmp.mapping.select_next_item()),
+        ['<C-p>'] = cmp.mapping(cmp.mapping.select_prev_item()),
+        ['<C-Space>'] = cmp.mapping.complete(),
+        ['<C-e>'] = cmp.mapping.abort(),
+        ['<CR>'] = cmp.mapping.confirm({ select = false }),
+      }),
+      sorting = {
+        comparators = {
+          lspkind_comparator({
+            kind_priority = {
+              Field = 11,
+              Property = 11,
+              Constant = 10,
+              Enum = 10,
+              EnumMember = 10,
+              Event = 10,
+              Function = 10,
+              Method = 10,
+              Operator = 10,
+              Reference = 10,
+              Struct = 10,
+              Variable = 9,
+              File = 8,
+              Folder = 8,
+              Class = 5,
+              Color = 5,
+              Module = 5,
+              Keyword = 2,
+              Constructor = 1,
+              Interface = 1,
+              Snippet = 0,
+              Text = 1,
+              TypeParameter = 1,
+              Unit = 1,
+              Value = 1,
+            },
+          }),
+          label_comparator,
+        },
+      },
+      sources = cmp.config.sources({
+        {name = 'nvim_lsp', keyword_length = 3, max_item_count = 100,
+          -- No snippets from LSP
+          entry_filter = function(entry)
+            return require("cmp").lsp.CompletionItemKind.Snippet ~= entry:get_kind()
+          end },
+        {name = 'path' },
+        {name = 'vsnip' },
+      }, {
+      })
+    })
+
+    -- Set configuration for specific filetype.
+    cmp.setup.filetype('gitcommit', {
+      sources = cmp.config.sources({
+        { name = 'cmp_git' }, -- You can specify the `cmp_git` source if you were installed it.
+      }, {
+        { name = 'buffer' },
+      })
+    })
+
     -- LSP config
-    lsp.rust_analyzer.setup(coq.lsp_ensure_capabilities({
+    local capabilities = require('cmp_nvim_lsp').default_capabilities()
+    lsp.rust_analyzer.setup({
+      capabilities = capabilities,
       on_attach = on_attach,
-    }))
-    lsp.pyright.setup(coq.lsp_ensure_capabilities({
+    })
+    lsp.pyright.setup({
+      capabilities = capabilities,
       on_attach = on_attach,
-    }))
-    lsp.tsserver.setup(coq.lsp_ensure_capabilities({
+    })
+    lsp.tsserver.setup({
+      capabilities = capabilities,
       on_attach = on_attach,
-    }))
-    lsp.rnix.setup(coq.lsp_ensure_capabilities({
+    })
+    lsp.rnix.setup({
+      capabilities = capabilities,
       on_attach = on_attach,
-    }))
-    lsp.ccls.setup{}
-    lsp.sumneko_lua.setup(coq.lsp_ensure_capabilities({
+    })
+    lsp.ccls.setup{
+      capabilities = capabilities,
+    }
+    lsp.sumneko_lua.setup({
+      capabilities = capabilities,
       on_attach = on_attach,
       settings = {
         Lua = {
@@ -387,7 +531,7 @@ in
           },
         },
       },
-    }))
+    })
   '';
 
   home.file.".config/nvim/lua/plugins.lua".text = ''
@@ -407,7 +551,14 @@ in
 
       -- Completion
       use {
-        'ms-jpq/coq_nvim', branch = 'coq'
+        'hrsh7th/cmp-nvim-lsp',
+        'hrsh7th/cmp-path',
+        'hrsh7th/cmp-git',
+        'hrsh7th/cmp-cmdline',
+        'hrsh7th/nvim-cmp',
+        -- 'hrsh7th/cmp-buffer',
+        'hrsh7th/cmp-vsnip',
+        'hrsh7th/vim-vsnip',
       }
 
       -- Workspaces
@@ -418,10 +569,6 @@ in
       -- Sessions
       use {
         'natecraddock/sessions.nvim',
-      }
-
-      use {
-        'ms-jpq/coq.artifacts', branch = 'artifacts'
       }
 
       -- Discord rich presence
