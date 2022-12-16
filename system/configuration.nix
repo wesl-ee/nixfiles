@@ -34,7 +34,7 @@
   };
 
   # Run IPFS on every machine
-  services.ipfs.enable = true;
+  services.kubo.enable = true;
 
   time.timeZone = "US/Eastern";
 

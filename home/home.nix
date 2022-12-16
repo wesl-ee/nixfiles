@@ -39,7 +39,6 @@ in
 
     # Chat
     pkgs.discord
-    pkgs.slack
 
     pkgs.libnotify
     pkgs.scrot
@@ -742,7 +741,6 @@ in
       enable = true;
       extensions = with pkgs.nur.repos.rycee.firefox-addons; [
         noscript
-        startpage-private-search
         ublock-origin
         cookie-autodelete
         ipfs-companion
@@ -760,11 +758,75 @@ in
               keyword = "@nixos";
             };
           };
-          settings = pkgs.lib.recursiveUpdate common-settings { };
-        };
-        levana = {
-          id = 1;
-          bookmarks = { };
+          search = {
+            force = true;
+            default = "Startpage";
+            engines = {
+              "Nix Packages" = {
+                urls = [{
+                  template = "https://search.nixos.org/packages";
+                  params = [
+                    { name = "type"; value = "packages"; }
+                    { name = "query"; value = "{searchTerms}"; }
+                  ];
+                }];
+                icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+                definedAliases = [ "@npackages" ];
+              };
+              "NixOS Wiki" = {
+                urls = [{ template = "https://nixos.wiki/index.php?search={searchTerms}"; }];
+                iconUpdateURL = "https://nixos.wiki/favicon.png";
+                definedAliases = [ "@nwiki" ];
+              };
+              "Startpage" = {
+                urls = [{ template = "https://www.startpage.com/sp/search?query={searchTerms}"; } ];
+                iconUpdateURL = "https://www.startpage.com/sp/cdn/favicons/favicon-96x96--default.png";
+                definedAliases = [ "@sp" ];
+              };
+              "docs.rs" = {
+                urls = [{ template = "https://docs.rs/releases/search?query={searchTerms}"; } ];
+                iconUpdateURL = "https://docs.rs/favicon.ico";
+                definedAliases = [ "@docsrs" ];
+              };
+              "Google Images" = {
+                urls = [{ template = "https://www.google.com/search?tbm=isch&q={searchTerms}"; } ];
+                iconUpdateURL = "https://www.google.com/favicon.ico";
+                definedAliases = [ "@gimages" ];
+              };
+              "Danbooru" = {
+                urls = [{ template = "https://danbooru.donmai.us/posts?tags={searchTerms}"; } ];
+                iconUpdateURL = "https://danbooru.donmai.us/favicon.svg";
+                definedAliases = [ "@danbooru" ];
+              };
+              "Gelbooru" = {
+                urls = [{ template = "https://gelbooru.com/index.php?page=post&s=list&tags={searchTerms}"; } ];
+                iconUpdateURL = "https://danbooru.donmai.us/favicon.svg";
+                definedAliases = [ "@gelbooru" ];
+              };
+              "Twitter" = {
+                urls = [{ template = "https://twitter.com/search?q={searchTerms}&f=live"; }];
+                iconUpdateURL = "https://abs.twimg.com/favicons/twitter.2.ico";
+                definedAliases = [ "@twitter" ];
+              };
+              "Github" = {
+                urls = [{template = "https://github.com/search?q={searchTerms}"; }];
+                iconUpdateURL = "https://github.githubassets.com/favicons/favicon.svg";
+                definedAliases = [ "@gh" ];
+              };
+              "Etherscan" = {
+                urls = [{ template = "https://etherscan.io/search?q={searchTerms}"; }];
+                iconUpdateURL = "https://etherscan.io/images/favicon3.ico";
+                definedAliases = [ "@etherscan" ];
+              };
+              "Tradingview" = {
+                urls = [{ template = "https://www.tradingview.com/chart/?symbol={searchTerms}"; }];
+                iconUpdateURL = "https://static.tradingview.com/static/images/favicon.ico";
+                definedAliases = [ "@tv" ];
+              };
+              "Google".metaData.alias = "@g";
+              "Wikipedia".metaData.alias = "@wp";
+            };
+          };
           settings = pkgs.lib.recursiveUpdate common-settings { };
         };
       };
