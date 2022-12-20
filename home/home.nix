@@ -411,7 +411,6 @@ in
       window = {
         completion = {
           border = 'rounded',
-          pumheight = 30,
         },
         documentation = {
           max_width = 40,
@@ -685,7 +684,8 @@ in
     {
       "MINIMIZE_TO_TRAY": false,
       "OPEN_ON_STARTUP": false,
-      "SKIP_HOST_UPDATE": true
+      "SKIP_HOST_UPDATE": true,
+      "DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING": true
     }
   '';
 
