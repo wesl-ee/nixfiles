@@ -503,6 +503,9 @@ in
       capabilities = capabilities,
       on_attach = on_attach,
     })
+    lsp.solc.setup{
+      capabilities = capabilities,
+    }
     lsp.ccls.setup{
       capabilities = capabilities,
     }
@@ -588,7 +591,7 @@ in
     enable = true;
     settings = {
       PASSWORD_STORE_KEY = "1068A429B387E62C";
-      PASSWORD_STORE_DIR = "~/.password-store";
+      PASSWORD_STORE_DIR = "/home/wesl-ee/.password-store";
     };
   };
 
