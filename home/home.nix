@@ -70,6 +70,7 @@ in
     pkgs.ripgrep
     pkgs.rnix-lsp
     pkgs.ccls
+    pkgs.gopls
   ];
 
 
@@ -505,9 +506,15 @@ in
     })
     lsp.solc.setup{
       capabilities = capabilities,
+      on_attach = on_attach,
     }
     lsp.ccls.setup{
       capabilities = capabilities,
+      on_attach = on_attach,
+    }
+    lsp.gopls.setup{
+      capabilities = capabilities,
+      on_attach = on_attach,
     }
     lsp.sumneko_lua.setup({
       capabilities = capabilities,
