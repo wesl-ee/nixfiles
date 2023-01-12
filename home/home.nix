@@ -540,6 +540,13 @@ in
         },
       },
     })
+
+    require"fidget".setup{
+      text = {
+        spinner = "dots",
+        done = "（*＾ワ＾*）",
+      }
+    }
   '';
 
   home.file.".config/nvim/lua/plugins.lua".text = ''
@@ -590,6 +597,10 @@ in
       use {
         'nvim-lualine/lualine.nvim',
         requires = { 'kyazdani42/nvim-web-devicons', opt = true }
+      }
+
+      use {
+        'j-hui/fidget.nvim'
       }
     end)
   '';
