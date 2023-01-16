@@ -83,6 +83,10 @@ in
         hostname = "gyw.wesl.ee";
         user = "w";
       };
+      "eon-break" = {
+        hostname = "eon-break.wesl.ee";
+        user = "w";
+      };
     };
   };
 
