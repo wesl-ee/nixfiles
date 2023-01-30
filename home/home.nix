@@ -67,6 +67,7 @@ in
     pkgs.nodePackages.typescript
     pkgs.sumneko-lua-language-server
     pkgs.rust-analyzer
+    pkgs.nodePackages.pyright
     pkgs.ripgrep
     pkgs.rnix-lsp
     pkgs.ccls
