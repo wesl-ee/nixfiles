@@ -177,6 +177,24 @@ in
     enable = true;
     hooks = {
       preNew = "mbsync --all";
+      postNew = ''
+        # Tag spam from presence of SpamAssassin X-Spam-Flag header
+        notmuch tag +spam -inbox XSpamFlag:YES
+      '';
+    };
+    new.tags = [
+      "unread"
+      "inbox"
+    ];
+    search.excludeTags = [
+      "deleted"
+      "spam"
+    ];
+    extraConfig = {
+        # Index headers for easier searching
+        index = {
+            "header.XSpamFlag" = "X-Spam-Flag";
+        };
     };
   };
   programs.neomutt = {
@@ -186,23 +204,41 @@ in
       unset mark_old
       set timeout=0
 
-      set sidebar_visible
-      set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
-      set mail_check_stats
-      set sidebar_divider_char = '│'
-      unset confirmappend      # don't ask, just do!
-      set quit                 # don't ask, just do!!
+    virtual-mailboxes \
+        "Inbox"     "notmuch://?query=tag:inbox and NOT tag:archive"\
+        "Void"     "notmuch://?query=tag:NOT inbox and NOT tag:archive"\
+        "Sent"      "notmuch://?query=tag:sent"\
+        "Spam"      "notmuch://?query=tag:spam"\
+        "Archived"     "notmuch://?query=tag:archive"
 
-      # sidebar mappings
-      bind index,pager \Ck sidebar-prev
-      bind index,pager \Cj sidebar-next
-      bind index,pager \Co sidebar-open
-      bind index,pager \Cp sidebar-prev-new
-      bind index,pager \Cn sidebar-next-new
-      bind index,pager B sidebar-toggle-visible
+    set index_format="%[%b %d %y] %zs %-15.15L (%?l?%4l&%4c?) %s"
 
-      set mailcap_path = ~/.mailcaprc
-      auto_view text/html
+    # notmuch bindings
+    macro index \\\\ "<vfolder-from-query>"              # looks up a hand made query
+    macro index A "<modify-labels>+archive -unread -inbox\\n"        # tag as Archived
+    macro index I "<modify-labels>-inbox -unread\\n"                 # removed from inbox
+    macro index S "<modify-labels-then-hide>-inbox -unread +spam\\n" # tag as spam
+
+    bind index <left> sidebar-prev          # got to previous folder in sidebar
+    bind index <right> sidebar-next         # got to next folder in sidebar
+    bind index <space> sidebar-open         # open selected folder from sidebar
+    bind index,pager B sidebar-toggle-visible
+
+    set sidebar_width   = 20
+
+    # Don't prompt for recipients on command line, let me edit manually
+    set edit_headers
+    set autoedit
+
+    set sidebar_visible
+    # set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
+    # set mail_check_stats
+    set sidebar_divider_char = '│'
+    unset confirmappend      # don't ask, just do!
+    set quit                 # don't ask, just do!!
+
+    set mailcap_path = ~/.mailcaprc
+    auto_view text/html
     '';
   };
   accounts.email = {
