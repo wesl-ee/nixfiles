@@ -128,6 +128,7 @@
     allowedUDPPorts = [ 51820 ];
   };
 
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
   system.copySystemConfiguration = true;
 
   # This value determines the NixOS release from which the default
