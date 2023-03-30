@@ -91,6 +91,10 @@ in
         hostname = "eon-break.wesl.ee";
         user = "w";
       };
+      "xen" = {
+        hostname = "xen.wesl.ee";
+        user = "w";
+      };
     };
   };
 
