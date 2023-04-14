@@ -186,13 +186,13 @@ in
       preNew = "mbsync --all";
       postNew = ''
         # Tag new spam from presence of SpamAssassin X-Spam-Flag header
-        notmuch tag +spam -inbox inbox XSpamFlag:YES
+        notmuch tag +spam -inbox tag:inbox XSpamFlag:YES
 
         # Tag new drafts from other clients
-        notmuch tag +draft -inbox -unread inbox folder:/Drafts/
+        notmuch tag +draft -inbox -unread tag:inbox folder:/Drafts/
 
         # Tag new sent mail
-        notmuch tag +sent -inbox -unread inbox folder:/Sent/
+        notmuch tag +sent -inbox -unread tag:inbox folder:/Sent/
       '';
     };
     new.tags = [
