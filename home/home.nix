@@ -967,7 +967,12 @@ in
       ".vim"
       ".nvim"
     ];
-    delta.enable = true;
+    delta = {
+      enable = true;
+      options = {
+        light = true;
+      };
+    };
     lfs.enable = true;
     extraConfig = {
       init = {
