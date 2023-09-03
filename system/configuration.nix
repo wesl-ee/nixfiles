@@ -63,6 +63,7 @@
     fontDir.enable = true;
     fonts = with pkgs; [
       hack-font
+      google-fonts
       mononoki
       weather-icons
       powerline-symbols
