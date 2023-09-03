@@ -6,14 +6,26 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.useDHCP = false;
-  networking.interfaces.enp11s0.ipv4.addresses = [ {
-        address = "10.0.10.3";
-        prefixLength = 24;
-  } ];
+  services.openssh.enable = true;
+  services.openssh.forwardX11 = true;
   networking.interfaces.enp1s0.useDHCP = true;
 
   networking.hostName = "divinity";
+
+  environment.systemPackages = with pkgs; [
+    cudatoolkit
+
+    # text-generation-webui
+    python310
+    python310Packages.pip
+    python310Packages.torchvision
+    python310Packages.torchWithCuda
+    python310Packages.pybind11
+    libGL libGLU
+    linuxPackages.nvidia_x11
+    glib zlib stdenv.cc
+  ];
+  services.logind.extraConfig = "RuntimeDirectorySize=50%";
 
   # HTC Vive Pro 2
   nixpkgs.overlays = [(self: super: {
@@ -24,27 +36,6 @@
       sha256 = "";
     };
   })];
-
-  fileSystems."/mnt/steam" =
-    { device = "10.0.10.1:/srv/nfs/steam";
-      fsType = "nfs";
-      options = [
-        "defaults"
-        "timeo=900"
-        "retrans=5"
-        "_netdev"
-      ];
-    };
-    fileSystems."/mnt/common" =
-    { device = "10.0.10.1:/srv/nfs/common";
-      fsType = "nfs";
-      options = [
-        "defaults"
-        "timeo=900"
-        "retrans=5"
-        "_netdev"
-      ];
-    };
 
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", GROUP="usb"
@@ -63,32 +54,39 @@
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
+    wacom.enable = true;
     displayManager = {
       lightdm.enable = true;
       defaultSession = "none+awesome";
       setupCommands = ''
-        ${pkgs.xorg.xrandr}/bin/xrandr --output DP-0 --auto --output HDMI-0 --rotate left --left-of DP-0
+        ${pkgs.xorg.xrandr}/bin/xrandr --output HDMI-0 --auto --output DP-2 --auto --rotate left --left-of HDMI-0
+        ${pkgs.xorg.xset}/bin/xset -dpms
+        ${pkgs.xorg.xset}/bin/xset s off
       '';
     };
     windowManager.awesome = {
       enable = true;
     };
+    serverFlagsSection = ''
+      Option "BlankTime"  "0"
+      Option "StandbyTime" "0"
+      Option "SuspendTime" "0"
+      Option "OffTime" "0"
+    '';
     deviceSection = ''
       Option "UseEdidDpi" "FALSE"
     '';
     xrandrHeads = [
-      "HDMI-0" {
-        output = "HDMI-0";
+      "DP-2" {
+        output = "DP-2";
         monitorConfig = ''
-          DisplaySize 597 336
           Option "DPMS" "false"
         '';
       }
-      "DP-0" {
-        output = "DP-0";
+      "HDMI-0" {
+        output = "HDMI-0";
         primary = true;
         monitorConfig = ''
-          DisplaySize 597 336
           Option "DPMS" "false"
         '';
       }
@@ -136,14 +134,22 @@
   };
 
   i18n.defaultLocale = "en_US.UTF-8";
-  fileSystems."/mnt/img" = {
-      device = "//10.0.0.28/img";
-      fsType = "cifs";
-      options = let
-        # this line prevents hanging on network split
-        automount_opts = "noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s";
+  fileSystems."/mnt/my-cloud" = {
+      device = "10.0.10.2:/personal";
+      fsType = "nfs";
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
+  };
 
-      in ["${automount_opts},credentials=/etc/nixos/samba-img-secrets"];
+  fileSystems."/mnt/public" = {
+      device = "10.0.10.2:/public";
+      fsType = "nfs";
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
+  };
+
+  fileSystems."/mnt/steam" = {
+      device = "10.0.10.2:/steam";
+      fsType = "nfs";
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
   };
 
     nixpkgs.config.allowUnfree = true;

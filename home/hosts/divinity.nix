@@ -6,7 +6,7 @@
         family: xterm
       size: 12
     import:
-      - ~/.config/alacritty/alacritty-theme/themes/gruvbox_light.yaml
+      - ~/.config/alacritty/alacritty-theme/themes/tender.yaml
   '';
 
 }
