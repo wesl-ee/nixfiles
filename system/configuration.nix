@@ -98,20 +98,6 @@
     };
   };
 
-  # Personal wiki
-  services.nginx = {
-    enable = true;
-    virtualHosts."local.wesl.ee" = {
-      root = "/www/local.wesl.ee";
-    };
-  };
-
-  networking.extraHosts =
-  ''
-    # Personal wiki (local build)
-    127.0.0.1 local.wesl.ee
-  '';
-
   # Chromecast discoverability
   services.avahi = {
     nssmdns = true;
