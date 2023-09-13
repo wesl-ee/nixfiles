@@ -54,7 +54,6 @@ in
 
     # Multimedia
     pkgs.gimp
-    pkgs.mpv
 
     # DJ shit
     pkgs.mixxx
@@ -63,6 +62,8 @@ in
     # Misc
     pkgs.xclip
     pkgs.jq
+
+    pkgs.kubectl
 
     # Used in neomutt config to determine if I can open in FF
     pkgs.runningx
@@ -406,6 +407,10 @@ cKcJF7CaA7TXbcLzxlrj3FHWKbgEY53hrH9rbaZOLg==
   home.file.".config/nvim/lua/config.lua".text = builtins.readFile "/home/wesl-ee/nixfiles/nvim/config.lua";
   home.file.".config/nvim/lua/plugins.lua".text = builtins.readFile "/home/wesl-ee/nixfiles/nvim/plugins.lua";
 
+  programs.mpv = {
+    enable = true;
+  };
+
   programs.password-store = {
     enable = true;
     settings = {
@@ -416,6 +421,13 @@ cKcJF7CaA7TXbcLzxlrj3FHWKbgEY53hrH9rbaZOLg==
 
   services.password-store-sync = { };
   services.pass-secret-service.enable = true;
+  services.mpd = {
+    enable = true;
+    musicDirectory = "/mnt/public/Music";
+  };
+  programs.ncmpcpp = {
+    enable = true;
+  };
 
   home.file.".config/alacritty/alacritty-theme".source = builtins.fetchGit {
     url = "https://github.com/eendroroy/alacritty-theme.git";
@@ -686,7 +698,7 @@ cKcJF7CaA7TXbcLzxlrj3FHWKbgEY53hrH9rbaZOLg==
     pictures = "$HOME/img";
     templates = "$HOME";
     publicShare = "$HOME";
-    music = "$HOME/music";
+    music = "/mnt/public/Music";
     download = "$HOME/dl";
     documents = "$HOME/doc";
     desktop = "$HOME";

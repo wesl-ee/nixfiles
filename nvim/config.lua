@@ -1,4 +1,5 @@
 require('plugins')
+vim.notify = require("notify")
 vim.cmd("colorscheme paper")
 vim.cmd("set nofixendofline")
 vim.cmd("hi clear SignColumn")
@@ -61,6 +62,16 @@ vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers)
 vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
 vim.keymap.set('n', '<leader>fr', require('telescope.builtin').lsp_references)
 vim.keymap.set('n', '<leader>fw', ':Telescope workspaces<cr>')
+-- Local LLM mappings
+vim.keymap.set({'n', 'v'}, '<leader>ld', ':LlmDelete<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lj', ':LlmSelect<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>ll', ':Llm complete<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lr', ':Llm rewrite<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lc', ':LlmCancel<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>tj', ':Llm to-japanese<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>te', ':Llm to-english<cr>')
+-- Gitsigns mappings
+vim.keymap.set('n', '<leader>gb', ':Gitsigns blame_line<cr>')
 local lsp_status = require('lsp-status')
 lsp_status.register_progress()
 -- Use an on_attach function to only map the following keys
@@ -80,14 +91,6 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
   vim.keymap.set('n', '<leader>m', vim.lsp.buf.formatting, bufopts)
   vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-  -- Copilot mappings
-  vim.keymap.set('i', '<C-g>h', require("copilot.suggestion").dismiss())
-  vim.keymap.set('i', '<C-g>l', require("copilot.suggestion").accept())
-  vim.keymap.set('i', '<C-g>j', require("copilot.suggestion").next())
-  vim.keymap.set('i', '<C-g>k', require("copilot.suggestion").prev())
-
-  -- Gitsigns mappings
-  vim.keymap.set('n', '<leader>gb', ':Gitsigns blame_line<CR>', bufopts)
   -- Status line
   lsp_status.on_attach(client)
 end
@@ -290,33 +293,134 @@ lsp.lua_ls.setup({
     },
   },
 })
-require"fidget".setup{
-  text = {
-    spinner = "dots",
-    done = "キタ━━━(゜∀゜)━━━!!!!! ",
+
+local prompts = require('llm.prompts')
+local openai = require('llm.providers.openai')
+local llm = require('llm')
+
+local function standard_code(input, context)
+  local surrounding_text = prompts.limit_before_after(context, 30)
+
+  local instruction = 'Replace the token <@@> with valid code. Respond only with code, never respond with an explanation, never respond with a markdown code block containing the code. Generate only code that is meant to replace the token, do not regenerate code in the context.'
+
+  local fewshot = {
+    {
+      role = 'user',
+      content = 'The code:\n```\nfunction greet(name) { console.log("Hello " <@@>) }\n```\n\nExisting text at <@@>:\n```+ nme```\n'
+    },
+    {
+      role = 'assistant',
+      content = '+ name'
+    }
   }
-}
--- require("llm").setup({
---   suggestion = {
---     enabled = true,
---     auto_trigger = true,
---      keymap = {
---        accept = "<C-g>l",
---        accept_word = false,
---        accept_line = false,
---        next = "<C-g>j",
---        prev = "<C-g>k",
---        dismiss = "<C-g>h",
---      },
---   },
---   panel = { enabled = false },
---   filetypes = {
---     typescript = true,
---     go = true,
---     lua = true,
---     markdown = true,
---     rust = true,
---     yaml = true,
---     ["*"] = false, -- disable for all other filetypes and ignore default `filetypes`
---   },
--- })
+
+  local content = 'The code:\n```\n' .. surrounding_text.before .. '<@@>' .. surrounding_text.after .. '\n```\n'
+
+  if #input > 0 then
+    content = content ..  '\n\nExisting text at <@@>:\n```' .. input .. '```\n'
+  end
+
+  if #context.args > 0 then
+    content = content .. context.args
+  end
+
+  local messages = {
+    {
+      role = 'user',
+      content = content
+    }
+  }
+
+  return {
+    instruction = instruction,
+    fewshot = fewshot,
+    messages = messages,
+  }
+end
+
+require("llm").setup((function()
+    model = 'Wizard-Vicuna-30B-Uncensored-GPTQ'
+
+    return {
+    default_prompt = 'complete',
+    hl_group = 'Comment',
+    prompts = {
+      ['complete'] = vim.tbl_extend('force', openai.default_prompt, {
+        options = {
+          url = 'http://10.0.0.11:5001/v1/'
+        },
+        params = {
+          max_tokens = 500,
+          model,
+        },
+      }),
+      ['rewrite'] = {
+        provider = openai,
+        options = {
+          url = 'http://10.0.0.11:5001/v1/'
+        },
+        params = { model, },
+        builder = function(input)
+          return {
+            messages = {
+              {
+                role = 'system',
+                content = 'Rewrite the following text to improve readability and clarity',
+              },
+              {
+                role = 'user',
+                content = input,
+              }
+            }
+          }
+        end,
+        mode = llm.mode.REPLACE
+      },
+      ['to-japanese'] = {
+        provider = openai,
+        options = { url = 'http://10.0.0.11:5001/v1/' },
+        params = { model, },
+        builder = function(input)
+          return {
+            messages = {
+              {
+                role = 'system',
+                content = 'Translate the following text to Japanese',
+              },
+              {
+                role = 'user',
+                content = input,
+              }
+            }
+          }
+        end,
+        mode = llm.mode.REPLACE
+      },
+      ['to-english'] = {
+        provider = openai,
+        options = {
+          url = 'http://10.0.0.11:5001/v1/'
+        },
+        params = {
+          model,
+        },
+        builder = function(input)
+          return {
+            messages = {
+              {
+                role = 'system',
+                content = 'Translate the following text to English',
+              },
+              {
+                role = 'user',
+                content = input,
+              }
+            }
+          }
+        end,
+        mode = llm.mode.REPLACE
+      }
+    },
+} end)())
+
+

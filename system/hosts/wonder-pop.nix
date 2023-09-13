@@ -1,8 +1,6 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
-  imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
-
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
   boot.loader.grub.version = 2;
@@ -16,11 +14,30 @@
   services.xserver = {
     wacom.enable = true;
 
+    modules = [ pkgs.xf86_input_wacom ];
     videoDrivers = [ "intel" ];
     deviceSection = ''
       Option "TearFree" "true"
       Option "AccelMethod" "sna"
     '';
+  };
+
+  fileSystems."/mnt/my-cloud" = {
+      device = "10.0.10.2:/personal";
+      fsType = "nfs";
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
+  };
+
+  fileSystems."/mnt/public" = {
+      device = "10.0.10.2:/public";
+      fsType = "nfs";
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
+  };
+
+  fileSystems."/mnt/steam" = {
+      device = "10.0.10.2:/steam";
+      fsType = "nfs";
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
   };
 
   users.users.wesl-ee = {
@@ -69,6 +86,20 @@
     };
 
   swapDevices = [ ];
+
+  networking.wireguard.interfaces = {
+    wg0 = {
+      ips = [ "10.0.20.105/24" ];
+      listenPort = 51820;
+      privateKeyFile = "/etc/wireguard-keys/wonder-pop-xen";
+      peers = [
+      {
+        publicKey = "5xodOxP3JGfj9bqysb+/lg0UUSK7ig27flLlT5+1dRI=";
+        allowedIPs = [ "10.0.20.1/32" "10.0.10.0/24" ];
+        endpoint = "xen.wesl.ee:51871";
+      } ];
+    };
+  };
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's

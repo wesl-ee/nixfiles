@@ -13,6 +13,7 @@
 
   # Redshift for automatic temperature adjustment
   location.provider = "geoclue2";
+  virtualisation.docker.enable = true;
   services.redshift = {
     enable = true;
     brightness = {
@@ -32,9 +33,6 @@
     windowManager.awesome.enable = true;
     libinput.enable = true;
   };
-
-  # Run IPFS on every machine
-  services.kubo.enable = true;
 
   time.timeZone = "US/Eastern";
 
@@ -57,7 +55,6 @@
   };
 
   programs.dconf.enable = true;
-  virtualisation.docker.enable = true;
 
   fonts = {
     fontDir.enable = true;
@@ -110,6 +107,9 @@
       workstation = true;
     };
   };
+
+  # Nheko needs this
+  services.passSecretService.enable = true;
 
   networking.firewall = {
     allowedUDPPorts = [ 51820 ];
