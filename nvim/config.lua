@@ -63,13 +63,14 @@ vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
 vim.keymap.set('n', '<leader>fr', require('telescope.builtin').lsp_references)
 vim.keymap.set('n', '<leader>fw', ':Telescope workspaces<cr>')
 -- Local LLM mappings
-vim.keymap.set({'n', 'v'}, '<leader>ld', ':LlmDelete<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lj', ':LlmSelect<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>ll', ':Llm complete<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lr', ':Llm rewrite<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lc', ':LlmCancel<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>tj', ':Llm to-japanese<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>te', ':Llm to-english<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>ld', ':ModelDelete<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lj', ':ModelSelect<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>ll', ':Model complete<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lr', ':Model rewrite<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lc', ':Model code<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lq', ':ModelCancel<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>tj', ':Model to-japanese<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>te', ':Model to-english<cr>')
 -- Gitsigns mappings
 vim.keymap.set('n', '<leader>gb', ':Gitsigns blame_line<cr>')
 local lsp_status = require('lsp-status')
@@ -294,133 +295,98 @@ lsp.lua_ls.setup({
   },
 })
 
-local prompts = require('llm.prompts')
-local openai = require('llm.providers.openai')
-local llm = require('llm')
+local starters = require('model.prompts.starters')
+local langserve = require('model.providers.langserve')
+local llm = require('model')
+local prompts = require('model.util.prompts')
 
-local function standard_code(input, context)
-  local surrounding_text = prompts.limit_before_after(context, 30)
-
-  local instruction = 'Replace the token <@@> with valid code. Respond only with code, never respond with an explanation, never respond with a markdown code block containing the code. Generate only code that is meant to replace the token, do not regenerate code in the context.'
-
-  local fewshot = {
-    {
-      role = 'user',
-      content = 'The code:\n```\nfunction greet(name) { console.log("Hello " <@@>) }\n```\n\nExisting text at <@@>:\n```+ nme```\n'
-    },
-    {
-      role = 'assistant',
-      content = '+ name'
-    }
-  }
-
-  local content = 'The code:\n```\n' .. surrounding_text.before .. '<@@>' .. surrounding_text.after .. '\n```\n'
-
-  if #input > 0 then
-    content = content ..  '\n\nExisting text at <@@>:\n```' .. input .. '```\n'
-  end
-
-  if #context.args > 0 then
-    content = content .. context.args
-  end
-
-  local messages = {
-    {
-      role = 'user',
-      content = content
-    }
-  }
-
-  return {
-    instruction = instruction,
-    fewshot = fewshot,
-    messages = messages,
-  }
-end
-
-require("llm").setup((function()
-    model = 'Wizard-Vicuna-30B-Uncensored-GPTQ'
+require("model").setup((function()
+    local langchain_endpoint = 'http://127.0.0.1:8000/'
 
     return {
     default_prompt = 'complete',
     hl_group = 'Comment',
     prompts = {
-      ['complete'] = vim.tbl_extend('force', openai.default_prompt, {
+      ['langserve:translator-jp-en'] = {
+        provider = langserve,
         options = {
-          url = 'http://10.0.0.11:5001/v1/'
+          base_url = langchain_endpoint .. 'translator/',
+          output_parser = langserve.chat_generation_chunk_parser
         },
-        params = {
-          max_tokens = 500,
-          model,
-        },
-      }),
-      ['rewrite'] = {
-        provider = openai,
-        options = {
-          url = 'http://10.0.0.11:5001/v1/'
-        },
-        params = { model, },
-        builder = function(input)
+        builder = function(input, context)
           return {
-            messages = {
-              {
-                role = 'system',
-                content = 'Rewrite the following text to improve readability and clarity',
-              },
-              {
-                role = 'user',
-                content = input,
-              }
-            }
+            input_language = "english",
+            output_language = "japanese",
+            text = input,
           }
-        end,
-        mode = llm.mode.REPLACE
+        end
       },
-      ['to-japanese'] = {
-        provider = openai,
-        options = { url = 'http://10.0.0.11:5001/v1/' },
-        params = { model, },
-        builder = function(input)
-          return {
-            messages = {
-              {
-                role = 'system',
-                content = 'Translate the following text to Japanese',
-              },
-              {
-                role = 'user',
-                content = input,
-              }
-            }
-          }
-        end,
-        mode = llm.mode.REPLACE
-      },
-      ['to-english'] = {
-        provider = openai,
+      ['langserve:translator-en-jp'] = {
+        provider = langserve,
         options = {
-          url = 'http://10.0.0.11:5001/v1/'
+          base_url = langchain_endpoint .. 'translator/',
+          output_parser = langserve.chat_generation_chunk_parser
         },
-        params = {
-          model,
-        },
-        builder = function(input)
+        builder = function(input, context)
           return {
-            messages = {
-              {
-                role = 'system',
-                content = 'Translate the following text to English',
-              },
-              {
-                role = 'user',
-                content = input,
-              }
-            }
+            input_language = "japanese",
+            output_language = "english",
+            text = input,
+          }
+        end
+      },
+      ['langserve:code-completion'] = {
+        provider = langserve,
+        options = {
+          base_url = langchain_endpoint .. 'coding-assistant/',
+          output_parser = langserve.chat_generation_chunk_parser
+        },
+        builder = function(input, context)
+          local surrounding_text = prompts.limit_before_after(context, 30)
+          local selection = ""
+          if context.selection then -- we only use input if we have a visual selection
+            selection = input
+          end
+          return {
+            before = surrounding_text.before,
+            after = surrounding_text.after,
+            selection = selection,
+            filename = context.filename,
           }
         end,
-        mode = llm.mode.REPLACE
-      }
+        mode = llm.mode.INSERT_OR_REPLACE,
+      },
+      ['langserve:writing-assistant'] = {
+        provider = langserve,
+        options = {
+          base_url = langchain_endpoint .. 'writing-assistant/',
+          output_parser = langserve.chat_generation_chunk_parser,
+        },
+        builder = function(input, context)
+          return {
+            text = input,
+          }
+        end
+      },
+      ['langserve:rewriting-assistant'] = {
+        provider = langserve,
+        options = {
+          base_url = langchain_endpoint .. 'rewriting-assistant/',
+          output_parser = langserve.chat_generation_chunk_parser,
+        },
+        builder = function(input, context)
+          return {
+            text = input,
+          }
+        end,
+        mode = llm.mode.REPLACE,
+      },
     },
 } end)())
 
-
+require("notify").setup({
+    background_colour = "#000000",
+    render = "minimal",
+    top_down = false,
+    stages = "static",
+})

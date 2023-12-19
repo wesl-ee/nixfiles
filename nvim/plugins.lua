@@ -40,13 +40,7 @@ return require('packer').startup(function(use)
   --   'j-hui/fidget.nvim'
   -- }
   use {
-    'gsuuon/llm.nvim',
+    'gsuuon/model.nvim',
     requires = { 'rcarriga/nvim-notify' }
   }
-  -- use {
-  --   'zbirenbaum/copilot.lua'
-  -- }
-  -- use {
-  --   'zbirenbaum/copilot-cmp'
-  -- }
 end)
