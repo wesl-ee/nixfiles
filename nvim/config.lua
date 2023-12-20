@@ -63,14 +63,17 @@ vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
 vim.keymap.set('n', '<leader>fr', require('telescope.builtin').lsp_references)
 vim.keymap.set('n', '<leader>fw', ':Telescope workspaces<cr>')
 -- Local LLM mappings
-vim.keymap.set({'n', 'v'}, '<leader>ld', ':ModelDelete<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lj', ':ModelSelect<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>ll', ':Model complete<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lr', ':Model rewrite<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lc', ':Model code<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lq', ':ModelCancel<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>tj', ':Model to-japanese<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>te', ':Model to-english<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>ld', ':Mdelete<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lj', ':Mselect<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lq', ':Mcancel<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>ls', ':Mshow<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>ll', ':Model langserve:general-instruct<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lr', ':Model langserve:rewriting-assistant<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lc', ':Model langserve:coding-assistant<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>tj', ':Model langserve:translator-jp-en<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>te', ':Model langserve:translator-en-jp<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>cj', ':Mchat openai<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>cc', ':Mchat<cr>')
 -- Gitsigns mappings
 vim.keymap.set('n', '<leader>gb', ':Gitsigns blame_line<cr>')
 local lsp_status = require('lsp-status')
@@ -304,7 +307,6 @@ require("model").setup((function()
     local langchain_endpoint = 'http://127.0.0.1:8000/'
 
     return {
-    default_prompt = 'complete',
     hl_group = 'Comment',
     prompts = {
       ['langserve:translator-jp-en'] = {
@@ -360,6 +362,18 @@ require("model").setup((function()
         provider = langserve,
         options = {
           base_url = langchain_endpoint .. 'writing-assistant/',
+          output_parser = langserve.chat_generation_chunk_parser,
+        },
+        builder = function(input, context)
+          return {
+            text = input,
+          }
+        end
+      },
+      ['langserve:general-instruct'] = {
+        provider = langserve,
+        options = {
+          base_url = langchain_endpoint .. 'general-instruct/',
           output_parser = langserve.chat_generation_chunk_parser,
         },
         builder = function(input, context)
