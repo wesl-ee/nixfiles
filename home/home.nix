@@ -33,6 +33,7 @@ in
     pkgs.sxiv
     pkgs.ipfs
     pkgs.zathura
+    pkgs.rxvt-unicode
 
     # Chat
     pkgs.nheko
@@ -78,6 +79,7 @@ in
     pkgs.rnix-lsp
     pkgs.ccls
     pkgs.gopls
+    # pkgs.lua54Packages.lua-lsp
   ];
 
 
@@ -368,8 +370,8 @@ cKcJF7CaA7TXbcLzxlrj3FHWKbgEY53hrH9rbaZOLg==
       neomutt.enable = true;
       primary = true;
       passwordCommand = "pass email/w@wesl.ee";
-      imap.host = "wesl.ee";
-      smtp.host = "wesl.ee";
+      imap.host = "gyw.wesl.ee";
+      smtp.host = "gyw.wesl.ee";
       realName = "Wesley Coakley";
       userName = "w@wesl.ee";
     };
@@ -579,13 +581,6 @@ cKcJF7CaA7TXbcLzxlrj3FHWKbgEY53hrH9rbaZOLg==
               keyword = "@nixos";
             };
           };
-          extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-            noscript
-            ublock-origin
-            cookie-autodelete
-            ipfs-companion
-            user-agent-string-switcher
-          ];
           search = {
             force = true;
             default = "Startpage";

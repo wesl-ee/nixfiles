@@ -16,6 +16,14 @@
   networking.wireless.enable = true;
   hardware.bluetooth.enable = true;
 
+  nixpkgs.config.services.postgresql = {
+    enable = true;
+    authentication = pkgs.lib.mkOverride 10 ''
+      #type database  DBuser  auth-method
+      local all       all     trust
+    '';
+  };
+
   services.xserver = {
     wacom.enable = true;
     videoDrivers = [ "intel" ];
@@ -90,5 +98,4 @@
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-  hardware.video.hidpi.enable = lib.mkDefault true;
 }
