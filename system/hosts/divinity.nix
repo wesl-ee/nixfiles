@@ -12,19 +12,19 @@
 
   networking.hostName = "divinity";
 
-  environment.systemPackages = with pkgs; [
-    cudatoolkit
+  # environment.systemPackages = with pkgs; [
+  #   cudatoolkit
 
-    # text-generation-webui
-    python310
-    python310Packages.pip
-    python310Packages.torchvision
-    python310Packages.torchWithCuda
-    python310Packages.pybind11
-    libGL libGLU
-    linuxPackages.nvidia_x11
-    glib zlib stdenv.cc
-  ];
+  #   python310
+  #   python310Packages.pip
+  #   python310Packages.torchvision
+  #   python310Packages.torchWithCuda
+  #   python310Packages.pybind11
+  #   libGL libGLU
+  #   linuxPackages.nvidia_x11
+  #   glib zlib stdenv.cc
+  # ];
+
   services.logind.extraConfig = "RuntimeDirectorySize=50%";
 
   # HTC Vive Pro 2
@@ -55,6 +55,7 @@
   services.xserver = {
     enable = true;
     wacom.enable = true;
+    dpi = 109;
     displayManager = {
       lightdm.enable = true;
       defaultSession = "none+awesome";
@@ -92,12 +93,7 @@
       }
     ];
   };
-    environment.variables = {
-    # GDK_SCALE = "2";
-    # GDK_DPI_SCALE = "0.5";
-    # _JAVA_OPTIONS = "-Dsun.java2d.uiScale=2";
-  };
-  hardware.video.hidpi.enable = true;
+
   services.xrdp = {
     enable = true;
     defaultWindowManager = "awesome";
@@ -121,7 +117,7 @@
       };
       hardware.bluetooth = {
         enable = true;
-        package = pkgs.bluezFull;
+        package = pkgs.bluez;
       };
       nixpkgs.config.pulseaudio = true;
 
@@ -152,7 +148,7 @@
       options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
   };
 
-    nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowUnfree = true;
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
   hardware.opengl.enable = true;
@@ -189,12 +185,12 @@
   hardware.opengl.driSupport32Bit = true;
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/5c3707c6-e159-47ab-ac3a-5638cefcf0db";
+    { device = "/dev/disk/by-label/nixos";
       fsType = "ext4";
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/52EE-C261";
+    { device = "/dev/disk/by-label/boot";
       fsType = "vfat";
     };
 
