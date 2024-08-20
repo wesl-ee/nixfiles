@@ -3,10 +3,6 @@ let
   sysconfig = (import <nixpkgs/nixos> {}).config;
 in
 {
-  imports = [
-    (./hosts + ("/" + sysconfig.networking.hostName + ".nix"))
-  ];
-
   fonts.fontconfig.enable = true;
 
   home.username = "wesl-ee";
@@ -160,7 +156,10 @@ in
     mutableTrust = false;
     publicKeys = [
       {
-        source = builtins.fetchurl "https://wesl.ee/pubkey.txt";
+        source = builtins.fetchurl {
+          url = "https://wesl.ee/pubkey.txt";
+          hash = "sha256-5d4ba1d96a617a735c0d25141bac7e84f8b8539ece0cf713c4cdf05b36e75780";
+        };
         trust = "ultimate";
       }
       {

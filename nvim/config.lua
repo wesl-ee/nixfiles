@@ -54,6 +54,51 @@ require('lualine').setup({ options = {
   theme = 'papercolor_light',
   icons_enabled = false
 }})
+require('copilot').setup({
+  panel = {
+    enabled = false,
+    -- auto_refresh = false,
+    -- keymap = {
+    --   jump_prev = "[[",
+    --   jump_next = "]]",
+    --   accept = "<CR>",
+    --   refresh = "gr",
+    --   open = "<M-CR>"
+    -- },
+    -- layout = {
+    --   position = "bottom", -- | top | left | right
+    --   ratio = 0.4
+    -- },
+  },
+  suggestion = {
+    enabled = true,
+    auto_trigger = false,
+    hide_during_completion = true,
+    debounce = 75,
+    keymap = {
+      accept = "<C-\\>",
+      accept_word = false,
+      accept_line = false,
+      -- next = "<M-]>",
+      next = "<C-]>",
+      -- prev = "<C-[>",
+      dismiss = "<M-]>",
+    },
+  },
+  filetypes = {
+    yaml = false,
+    markdown = false,
+    help = false,
+    gitcommit = false,
+    gitrebase = false,
+    hgcommit = false,
+    svn = false,
+    cvs = false,
+    ["."] = false,
+  },
+  copilot_node_command = 'node', -- Node.js version must be > 18.x
+  server_opts_overrides = {},
+})
 require("telescope").setup({})
 require("telescope").load_extension("workspaces")
 vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files)
@@ -74,7 +119,6 @@ vim.keymap.set({'n', 'v'}, '<leader>tj', ':Model langserve:translator-jp-en<cr>'
 vim.keymap.set({'n', 'v'}, '<leader>te', ':Model langserve:translator-en-jp<cr>')
 vim.keymap.set({'n', 'v'}, '<leader>cj', ':Mchat openai<cr>')
 vim.keymap.set({'n', 'v'}, '<leader>cc', ':Mchat<cr>')
-vim.keymap.set({'n'}, '<leader>r', ':lua require("specs").show_specs()<cr>')
 -- Gitsigns mappings
 vim.keymap.set('n', '<leader>gb', ':Gitsigns blame_line<cr>')
 local lsp_status = require('lsp-status')
@@ -88,22 +132,18 @@ local on_attach = function(client, bufnr)
   local bufopts = { noremap=true, silent=true, buffer=bufnr }
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+  vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
   vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
   vim.keymap.set('n', '<leader>k', vim.lsp.buf.signature_help, bufopts)
   vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, bufopts)
   vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
-  vim.keymap.set('n', '<leader>m', vim.lsp.buf.formatting, bufopts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
   -- Status line
   lsp_status.on_attach(client)
 end
 local lsp = require "lspconfig"
 local cmp = require'cmp'
-local opts = {
-  on_attach = on_attach,
-}
 local lspkind_comparator = function(conf)
   local lsp_types = require('cmp.types').lsp
   return function(entry1, entry2)
@@ -237,6 +277,10 @@ cmp.setup.filetype('gitcommit', {
 })
 -- LSP config
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local lsp_opts = {
+  capabilities = capabilities,
+  on_attach = on_attach
+}
 lsp.rust_analyzer.setup({
   capabilities = capabilities,
   on_attach = on_attach,
@@ -260,7 +304,7 @@ lsp.tsserver.setup({
   capabilities = capabilities,
   on_attach = on_attach,
 })
-lsp.rnix.setup({
+lsp.nil_ls.setup({
   capabilities = capabilities,
   on_attach = on_attach,
 })
@@ -405,18 +449,3 @@ require("notify").setup({
     top_down = false,
     stages = "static",
 })
-require('specs').setup{
-    show_jumps  = true,
-    min_jump = 3,
-    popup = {
-        delay_ms = 0, -- delay before popup displays
-        inc_ms = 10, -- time increments used for fade/resize effects 
-        blend = 10, -- starting blend, between 0-100 (fully transparent), see :h winblend
-        width = 10,
-        winhl = "PMenu",
-        fader = require('specs').pulse_fader,
-        resizer = require('specs').shrink_resizer
-    },
-    ignore_filetypes = {},
-    ignore_buftypes = {},
-}

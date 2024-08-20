@@ -40,5 +40,7 @@ return require('packer').startup(function(use)
     'gsuuon/model.nvim',
     requires = { 'rcarriga/nvim-notify' }
   }
-  use {'edluffy/specs.nvim'}
+  use {
+    "zbirenbaum/copilot.lua",
+  }
 end)
