@@ -41,6 +41,7 @@
       "mpc"
       "ncmpcpp"
       "pinentry-mac"
+      "neovide"
     ];
   };
 }

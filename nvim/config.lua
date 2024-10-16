@@ -119,6 +119,7 @@ vim.keymap.set({'n', 'v'}, '<leader>tj', ':Model langserve:translator-jp-en<cr>'
 vim.keymap.set({'n', 'v'}, '<leader>te', ':Model langserve:translator-en-jp<cr>')
 vim.keymap.set({'n', 'v'}, '<leader>cj', ':Mchat openai<cr>')
 vim.keymap.set({'n', 'v'}, '<leader>cc', ':Mchat<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>[[', require("copilot.suggestion").toggle_auto_trigger)
 -- Gitsigns mappings
 vim.keymap.set('n', '<leader>gb', ':Gitsigns blame_line<cr>')
 local lsp_status = require('lsp-status')
@@ -449,3 +450,4 @@ require("notify").setup({
     top_down = false,
     stages = "static",
 })
+
