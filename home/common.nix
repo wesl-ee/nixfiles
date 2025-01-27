@@ -158,66 +158,8 @@ in
       {
         source = builtins.fetchurl {
           url = "https://wesl.ee/pubkey.txt";
-          hash = "sha256-5d4ba1d96a617a735c0d25141bac7e84f8b8539ece0cf713c4cdf05b36e75780";
+          # hash = "sha256-18kpj4mm0z9cg67imclnq3xsx792zwsnacp61z7xdgxpy7y7qjhi";
         };
-        trust = "ultimate";
-      }
-      {
-        text = ''
------BEGIN PGP PUBLIC KEY BLOCK-----
-Comment: https://keybase.io/download
-Version: Keybase Go 6.0.2 (linux)
-
-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
-=Whl4
------END PGP PUBLIC KEY BLOCK-----
-'';
         trust = "ultimate";
       }
     ];

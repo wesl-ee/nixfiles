@@ -16,9 +16,29 @@
       export PROMPT='%n@%m %2~ %(!.#.>) ' 
       export PROMPT_DIRTRIM=3
       export EDITOR=nvim
+      export OPENAI_API_KEY=$(<~/.openai)
       export IPFS_PATH="$HOME/.ipfs"
-      export PATH="$PATH:$HOME/go/bin"
+      export PATH="$PATH:$HOME/go/bin:$HOME/.foundry/bin"
       eval "$(/opt/homebrew/bin/brew shellenv)"
+      # Shell-GPT integration ZSH v0.2
+      _sgpt_zsh() {
+      if [[ -n "$BUFFER" ]]; then
+          _sgpt_prev_cmd=$BUFFER
+          BUFFER+="⌛"
+          zle -I && zle redisplay
+          BUFFER=$(sgpt --shell <<< "$_sgpt_prev_cmd" --no-interaction)
+          zle end-of-line
+      fi
+      }
+      zle -N _sgpt_zsh
+      bindkey ^o _sgpt_zsh
+      # Shell-GPT integration ZSH v0.2
+
+      sgpt_shell() {
+          sgpt --shell "$*"
+      }
+      alias '?s'=sgpt_shell
+      alias '?r'='sgpt --repl temp'
     '';
   };
 
@@ -33,14 +53,17 @@
     pkgs.nodePackages.typescript
     pkgs.nodePackages.typescript-language-server
     pkgs.lua-language-server
-    pkgs.rust-analyzer
+    pkgs.rust-analyzer-unwrapped
     # pkgs.nodePackages.pyright
     pkgs.ripgrep
     pkgs.nil
-    pkgs.awscli2
-    pkgs.aws-vault
     pkgs.ccls
     pkgs.gopls
+
+    # tabby
+    pkgs.tabby-agent
+
+    pkgs.shell-gpt
   ];
 
 
@@ -341,7 +364,7 @@
       {
         source = builtins.fetchurl {
           url = "https://wesl.ee/pubkey.txt";
-          sha256 = "102pwwv5pw6dqh9zf36fkr9viy44gsn1n5151mf76yk1dbcs2jsx";
+          sha256 = "18kpj4mm0z9cg67imclnq3xsx792zwsnacp61z7xdgxpy7y7qjhi";
         };
         trust = "ultimate";
       }
@@ -351,7 +374,7 @@
   programs.git = {
     enable = true;
     userName = "Wesley Coakley";
-    userEmail = "wesley@skip.money";
+    userEmail = "wesley.coakley@magic.link";
     ignores = [
       "*.swap"
       ".vim"
