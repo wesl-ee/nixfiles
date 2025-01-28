@@ -118,7 +118,7 @@ vim.keymap.set({'n', 'v'}, '<leader>cc', function()
   if vim.bo.filetype == 'mchat' then
     vim.cmd('Mchat')
   else
-    vim.cmd('Mchat openai')
+    vim.cmd('Mchat gpt4')
   end
 end)
 
@@ -430,7 +430,7 @@ require("model").setup((function()
           builder = function(input, context)
             return openai.adapt(code_replace_fewshot(input, context))
           end,
-      }),
+      })
       ['commit'] = starters['commit'],
       --['langserve:translator-jp-en'] = {
       --  provider = langserve,
