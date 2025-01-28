@@ -54,51 +54,51 @@ require('lualine').setup({ options = {
   theme = 'papercolor_light',
   icons_enabled = false
 }})
-require('copilot').setup({
-  panel = {
-    enabled = false,
-    -- auto_refresh = false,
-    -- keymap = {
-    --   jump_prev = "[[",
-    --   jump_next = "]]",
-    --   accept = "<CR>",
-    --   refresh = "gr",
-    --   open = "<M-CR>"
-    -- },
-    -- layout = {
-    --   position = "bottom", -- | top | left | right
-    --   ratio = 0.4
-    -- },
-  },
-  suggestion = {
-    enabled = true,
-    auto_trigger = false,
-    hide_during_completion = true,
-    debounce = 75,
-    keymap = {
-      accept = "<C-\\>",
-      accept_word = false,
-      accept_line = false,
-      -- next = "<M-]>",
-      next = "<C-]>",
-      -- prev = "<C-[>",
-      dismiss = "<M-]>",
-    },
-  },
-  filetypes = {
-    yaml = false,
-    markdown = false,
-    help = false,
-    gitcommit = false,
-    gitrebase = false,
-    hgcommit = false,
-    svn = false,
-    cvs = false,
-    ["."] = false,
-  },
-  copilot_node_command = 'node', -- Node.js version must be > 18.x
-  server_opts_overrides = {},
-})
+--require('copilot').setup({
+--  panel = {
+--    enabled = false,
+--    -- auto_refresh = false,
+--    -- keymap = {
+--    --   jump_prev = "[[",
+--    --   jump_next = "]]",
+--    --   accept = "<CR>",
+--    --   refresh = "gr",
+--    --   open = "<M-CR>"
+--    -- },
+--    -- layout = {
+--    --   position = "bottom", -- | top | left | right
+--    --   ratio = 0.4
+--    -- },
+--  },
+--  suggestion = {
+--    enabled = true,
+--    auto_trigger = false,
+--    hide_during_completion = true,
+--    debounce = 75,
+--    keymap = {
+--      accept = "<C-\\>",
+--      accept_word = false,
+--      accept_line = false,
+--      -- next = "<M-]>",
+--      next = "<C-]>",
+--      -- prev = "<C-[>",
+--      dismiss = "<M-]>",
+--    },
+--  },
+--  filetypes = {
+--    yaml = false,
+--    markdown = false,
+--    help = false,
+--    gitcommit = false,
+--    gitrebase = false,
+--    hgcommit = false,
+--    svn = false,
+--    cvs = false,
+--    ["."] = false,
+--  },
+--  copilot_node_command = 'node', -- Node.js version must be > 18.x
+--  server_opts_overrides = {},
+--})
 require("telescope").setup({})
 require("telescope").load_extension("workspaces")
 vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files)
@@ -112,14 +112,20 @@ vim.keymap.set({'n', 'v'}, '<leader>ld', ':Mdelete<cr>')
 vim.keymap.set({'n', 'v'}, '<leader>lj', ':Mselect<cr>')
 vim.keymap.set({'n', 'v'}, '<leader>lq', ':Mcancel<cr>')
 vim.keymap.set({'n', 'v'}, '<leader>ls', ':Mshow<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>ll', ':Model langserve:general-instruct<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lr', ':Model langserve:rewriting-assistant<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>lc', ':Model langserve:coding-assistant<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>tj', ':Model langserve:translator-jp-en<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>te', ':Model langserve:translator-en-jp<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>cj', ':Mchat openai<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>cc', ':Mchat<cr>')
-vim.keymap.set({'n', 'v'}, '<leader>[[', require("copilot.suggestion").toggle_auto_trigger)
+vim.keymap.set({'n', 'v'}, '<leader>ll', ':Model gpt<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>lc', ':Model code<cr>')
+vim.keymap.set({'n', 'v'}, '<leader>cc', function()
+  if vim.bo.filetype == 'mchat' then
+    vim.cmd('Mchat')
+  else
+    vim.cmd('Mchat openai')
+  end
+end)
+
+--
+--vim.g.tabby_agent_start_command = {"npx", "tabby-agent", "--stdio"}
+--vim.g.tabby_inline_completion_trigger = "manual"
+--vim.g.tabby_inline_completion_keybinding_accept = "<Tab>"
 -- Gitsigns mappings
 vim.keymap.set('n', '<leader>gb', ':Gitsigns blame_line<cr>')
 local lsp_status = require('lsp-status')
@@ -206,8 +212,8 @@ end
       border = 'rounded',
     },
     documentation = {
-      max_width = 40,
-      max_height = 30,
+      -- max_width = 40,
+      -- max_height = 30,
       border = 'rounded',
     },
     formatting = {
@@ -222,6 +228,24 @@ end
     ['<C-Space>'] = cmp.mapping.complete(),
     ['<C-e>'] = cmp.mapping.abort(),
     ['<CR>'] = cmp.mapping.confirm({ select = false }),
+    ['<C-t>'] = cmp.mapping(function()
+      cmp.complete({
+        config = {
+          sources = {
+            {
+              name = 'nvim_lsp',
+              entry_filter = function(entry)
+                  for key,value in pairs(entry:get_completion_item()) do
+                    vim.notify(key..":")
+                  end
+                return entry:get_completion_item().labelDetails and entry:get_completion_item().labelDetails.description == "Tabby"
+              end,
+            },
+          },
+        },
+      })
+    end, { 'i', 'c' }),
+
   }),
   sorting = {
     comparators = {
@@ -261,7 +285,7 @@ end
     {name = 'nvim_lsp', keyword_length = 3, max_item_count = 100,
       -- No snippets from LSP
       entry_filter = function(entry)
-      return require("cmp").lsp.CompletionItemKind.Snippet ~= entry:get_kind()
+        return require("cmp").lsp.CompletionItemKind.Snippet ~= entry:get_kind()
       end },
     {name = 'path' },
     {name = 'vsnip' },
@@ -321,6 +345,11 @@ lsp.gopls.setup{
   capabilities = capabilities,
   on_attach = on_attach,
 }
+--lsp.tabby_ml.setup{
+--  -- capabilities = capabilities,
+--  -- on_attach = on_attach,
+--  cmd = {"npx", "tabby-agent", "--stdio", "--lsp"},
+--}
 lsp.lua_ls.setup({
   capabilities = capabilities,
   on_attach = on_attach,
@@ -345,102 +374,150 @@ lsp.lua_ls.setup({
 })
 
 local starters = require('model.prompts.starters')
-local langserve = require('model.providers.langserve')
+--local langserve = require('model.providers.langserve')
+local openai = require('model.providers.openai')
 local llm = require('model')
 local prompts = require('model.util.prompts')
+local function code_replace_fewshot(input, context)
+  local surrounding_text = prompts.limit_before_after(context, 30)
+
+  local content = 'The code:\n```\n'
+    .. surrounding_text.before
+    .. '<@@>'
+    .. surrounding_text.after
+    .. '\n```\n'
+
+  if context.selection then -- we only use input if we have a visual selection
+    content = content .. '\n\nExisting text at <@@>:\n```' .. input .. '```\n'
+  end
+
+  if #context.args > 0 then
+    content = content .. '\nInstruction: ' .. context.args
+  end
+
+  local messages = {
+    {
+      role = 'user',
+      content = content,
+    },
+  }
+
+  return {
+    instruction = 'You are an expert programmer. You are given a snippet of code which includes the symbol <@@>. Complete the correct code that should replace the <@@> symbol given the content. Only respond with the code that should replace the symbol <@@>. If you include any other code, the program will fail to compile and the user will be very sad.',
+    fewshot = {
+      {
+        role = 'user',
+        content = 'The code:\n```\nfunction greet(name) { console.log("Hello " <@@>) }\n```\n\nExisting text at <@@>: `+ nme`',
+      },
+      {
+        role = 'assistant',
+        content = '+ name',
+      },
+    },
+    messages = messages,
+  }
+end
+
 
 require("model").setup((function()
-    local langchain_endpoint = 'http://127.0.0.1:8000/'
-
+    -- local langchain_endpoint = 'http://127.0.0.1:8000/'
+    --
     return {
     hl_group = 'Comment',
     prompts = {
-      ['langserve:translator-jp-en'] = {
-        provider = langserve,
-        options = {
-          base_url = langchain_endpoint .. 'translator/',
-          output_parser = langserve.chat_generation_chunk_parser
-        },
-        builder = function(input, context)
-          return {
-            input_language = "english",
-            output_language = "japanese",
-            text = input,
-          }
-        end
-      },
-      ['langserve:translator-en-jp'] = {
-        provider = langserve,
-        options = {
-          base_url = langchain_endpoint .. 'translator/',
-          output_parser = langserve.chat_generation_chunk_parser
-        },
-        builder = function(input, context)
-          return {
-            input_language = "japanese",
-            output_language = "english",
-            text = input,
-          }
-        end
-      },
-      ['langserve:code-completion'] = {
-        provider = langserve,
-        options = {
-          base_url = langchain_endpoint .. 'coding-assistant/',
-          output_parser = langserve.chat_generation_chunk_parser
-        },
-        builder = function(input, context)
-          local surrounding_text = prompts.limit_before_after(context, 30)
-          local selection = ""
-          if context.selection then -- we only use input if we have a visual selection
-            selection = input
-          end
-          return {
-            before = surrounding_text.before,
-            after = surrounding_text.after,
-            selection = selection,
-            filename = context.filename,
-          }
-        end,
-        mode = llm.mode.INSERT_OR_REPLACE,
-      },
-      ['langserve:writing-assistant'] = {
-        provider = langserve,
-        options = {
-          base_url = langchain_endpoint .. 'writing-assistant/',
-          output_parser = langserve.chat_generation_chunk_parser,
-        },
-        builder = function(input, context)
-          return {
-            text = input,
-          }
-        end
-      },
-      ['langserve:general-instruct'] = {
-        provider = langserve,
-        options = {
-          base_url = langchain_endpoint .. 'general-instruct/',
-          output_parser = langserve.chat_generation_chunk_parser,
-        },
-        builder = function(input, context)
-          return {
-            text = input,
-          }
-        end
-      },
-      ['langserve:rewriting-assistant'] = {
-        provider = langserve,
-        options = {
-          base_url = langchain_endpoint .. 'rewriting-assistant/',
-          output_parser = langserve.chat_generation_chunk_parser,
-        },
-        builder = function(input, context)
-          return {
-            text = input,
-          }
-        end,
-        mode = llm.mode.REPLACE,
-      },
+      ['gpt'] = starters['gpt'],
+      ['code'] = vim.tbl_extend('force', starters['openai:gpt4-code'], {
+          builder = function(input, context)
+            return openai.adapt(code_replace_fewshot(input, context))
+          end,
+      }),
+      ['commit'] = starters['commit'],
+      --['langserve:translator-jp-en'] = {
+      --  provider = langserve,
+      --  options = {
+      --    base_url = langchain_endpoint .. 'translator/',
+      --    output_parser = langserve.chat_generation_chunk_parser
+      --  },
+      --  builder = function(input, context)
+      --    return {
+      --      input_language = "english",
+      --      output_language = "japanese",
+      --      text = input,
+      --    }
+      --  end
+      --},
+      --['langserve:translator-en-jp'] = {
+      --  provider = langserve,
+      --  options = {
+      --    base_url = langchain_endpoint .. 'translator/',
+      --    output_parser = langserve.chat_generation_chunk_parser
+      --  },
+      --  builder = function(input, context)
+      --    return {
+      --      input_language = "japanese",
+      --      output_language = "english",
+      --      text = input,
+      --    }
+      --  end
+      --},
+      --['langserve:code-completion'] = {
+      --  provider = langserve,
+      --  options = {
+      --    base_url = langchain_endpoint .. 'coding-assistant/',
+      --    output_parser = langserve.chat_generation_chunk_parser
+      --  },
+      --  builder = function(input, context)
+      --    local surrounding_text = prompts.limit_before_after(context, 30)
+      --    local selection = ""
+      --    if context.selection then -- we only use input if we have a visual selection
+      --      selection = input
+      --    end
+      --    return {
+      --      before = surrounding_text.before,
+      --      after = surrounding_text.after,
+      --      selection = selection,
+      --      filename = context.filename,
+      --    }
+      --  end,
+      --  mode = llm.mode.INSERT_OR_REPLACE,
+      --},
+      --['langserve:writing-assistant'] = {
+      --  provider = langserve,
+      --  options = {
+      --    base_url = langchain_endpoint .. 'writing-assistant/',
+      --    output_parser = langserve.chat_generation_chunk_parser,
+      --  },
+      --  builder = function(input, context)
+      --    return {
+      --      text = input,
+      --    }
+      --  end
+      --},
+      --['langserve:general-instruct'] = {
+      --  provider = langserve,
+      --  options = {
+      --    base_url = langchain_endpoint .. 'general-instruct/',
+      --    output_parser = langserve.chat_generation_chunk_parser,
+      --  },
+      --  builder = function(input, context)
+      --    return {
+      --      text = input,
+      --    }
+      --  end
+      --},
+      --['langserve:rewriting-assistant'] = {
+      --  provider = langserve,
+      --  options = {
+      --    base_url = langchain_endpoint .. 'rewriting-assistant/',
+      --    output_parser = langserve.chat_generation_chunk_parser,
+      --  },
+      --  builder = function(input, context)
+      --    return {
+      --      text = input,
+      --    }
+      --  end,
+      --  mode = llm.mode.REPLACE,
+      --},
     },
 } end)())
 
