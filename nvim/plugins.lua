@@ -37,10 +37,13 @@ return require('packer').startup(function(use)
     requires = { 'nvim-tree/nvim-web-devicons', opt = true }
   }
   use {
-    'gsuuon/model.nvim',
     requires = { 'rcarriga/nvim-notify' }
   }
   use {
     "zbirenbaum/copilot.lua",
   }
+  -- use {
+  --     "TabbyML/vim-tabby",
+  --     required = { 'neovim/nvim-lspconfig' }
+  -- }
 end)

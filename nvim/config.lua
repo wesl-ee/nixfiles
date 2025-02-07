@@ -118,11 +118,10 @@ vim.keymap.set({'n', 'v'}, '<leader>cc', function()
   if vim.bo.filetype == 'mchat' then
     vim.cmd('Mchat')
   else
-    vim.cmd('Mchat gpt4')
+    vim.cmd('Mchat gpt')
   end
 end)
 
---
 --vim.g.tabby_agent_start_command = {"npx", "tabby-agent", "--stdio"}
 --vim.g.tabby_inline_completion_trigger = "manual"
 --vim.g.tabby_inline_completion_keybinding_accept = "<Tab>"
@@ -374,6 +373,7 @@ lsp.lua_ls.setup({
 })
 
 local starters = require('model.prompts.starters')
+local starters_chats = require('model.prompts.chats')
 --local langserve = require('model.providers.langserve')
 local openai = require('model.providers.openai')
 local llm = require('model')
@@ -430,7 +430,7 @@ require("model").setup((function()
           builder = function(input, context)
             return openai.adapt(code_replace_fewshot(input, context))
           end,
-      })
+      }),
       ['commit'] = starters['commit'],
       --['langserve:translator-jp-en'] = {
       --  provider = langserve,
@@ -518,6 +518,13 @@ require("model").setup((function()
       --  end,
       --  mode = llm.mode.REPLACE,
       --},
+    },
+    chats = {
+      ['gpt'] = vim.tbl_extend('force', starters_chats['openai'], {
+        params = {
+          model = 'gpt-4o'
+        }
+      }),
     },
 } end)())
 
