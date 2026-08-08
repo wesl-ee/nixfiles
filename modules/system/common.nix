@@ -1,15 +1,11 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
-
+# Shared NixOS config for every host. Per-host config lives in ./hosts/<name>.nix.
 { config, pkgs, ... }:
 {
-  imports = [
-    # System-specific configuration (ie per-host)
-    /etc/nixos/host.nix
-    # System users
-    /etc/nixos/users.nix
-  ];
+  users.users.wesl-ee = {
+    isNormalUser = true;
+    shell = pkgs.zsh;
+    extraGroups = [ "wheel" "video" "dialout" "uucp" ];
+  };
 
   # Redshift for automatic temperature adjustment
   location.provider = "geoclue2";
@@ -26,6 +22,15 @@
     };
   };
 
+  services.flatpak.enable = true;
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+
+  programs.zsh.enable = true;
+  programs.adb.enable = true;
+
   # xorg + Awesome WM
   services.xserver = {
     enable = true;
@@ -36,14 +41,12 @@
 
   time.timeZone = "US/Eastern";
 
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
-
   environment.systemPackages = with pkgs; [
     neovim
     acpi
     pavucontrol
     wget
+    git
     links2
     nmap
     awesome
@@ -67,7 +70,7 @@
       noto-fonts
       noto-fonts-cjk-serif
       noto-fonts-cjk-sans
-      noto-fonts-emoji
+      noto-fonts-color-emoji
       fira-code-symbols
     ];
 
@@ -101,12 +104,14 @@
     enable = true;
     ipv4 = true;
     ipv6 = true;
+    openFirewall = true;
     publish = {
       enable = true;
       addresses = true;
       workstation = true;
     };
   };
+  services.printing.enable = true;
 
   # Nheko needs this
   services.passSecretService.enable = true;
@@ -116,15 +121,22 @@
   };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  system.copySystemConfiguration = true;
+  nix.settings.download-buffer-size = 524288000; # 500 MiB
+  nixpkgs.config.allowUnfree = true;
+  # TODO: both marked insecure on nixos-25.11 as of this pin, pre-existing
+  # issues surfaced only now because flakes actually eval this (channels
+  # didn't). Revisit each:
+  # - docker-28.5.2: unmaintained since 2025-11, upstream advises docker_29+
+  # - olm-3.2.16: nheko's Matrix e2ee dep, deprecated upstream (CVE-2024-45191/2/3)
+  nixpkgs.config.permittedInsecurePackages = [ "docker-28.5.2" "olm-3.2.16" ];
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # on your system were taken. It's perfectly fine and recommended to leave
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "22.05"; # Did you read the comment?
-
+  # Identical across every host today; any newly-installed host must override
+  # this in its own hosts/<name>.nix rather than inherit it.
+  system.stateVersion = "22.05";
 }
-

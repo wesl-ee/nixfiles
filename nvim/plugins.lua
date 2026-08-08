@@ -29,7 +29,10 @@ return require('packer').startup(function(use)
     'natecraddock/sessions.nvim',
   }
   use {
-    'nvim-telescope/telescope.nvim', tag = '0.1.5',
+    'catppuccin/nvim', as = 'catppuccin',
+  }
+  use {
+    'nvim-telescope/telescope.nvim', tag = '0.2.1',
     requires = { {'nvim-lua/plenary.nvim'} }
   }
   use {
@@ -37,13 +40,6 @@ return require('packer').startup(function(use)
     requires = { 'nvim-tree/nvim-web-devicons', opt = true }
   }
   use {
-    requires = { 'rcarriga/nvim-notify' }
+    'rcarriga/nvim-notify'
   }
-  use {
-    "zbirenbaum/copilot.lua",
-  }
-  -- use {
-  --     "TabbyML/vim-tabby",
-  --     required = { 'neovim/nvim-lspconfig' }
-  -- }
 end)

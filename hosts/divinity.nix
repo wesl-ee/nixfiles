@@ -9,33 +9,42 @@
   services.openssh.enable = true;
   services.openssh.forwardX11 = true;
   networking.interfaces.enp1s0.useDHCP = true;
+  # networking.interfaces.enp15s3u3u2c2.useDHCP = false;
 
   networking.hostName = "divinity";
 
-  # environment.systemPackages = with pkgs; [
-  #   cudatoolkit
+  environment.systemPackages = with pkgs; let
+  	# ollamagpu = pkgs.ollama.override { llama-cpp = (pkgs.llama-cpp.override {cudaSupport = true; openblasSupport = false; }); };
+  in
+  [
+    # cudatoolkit
+    # python312
+    # python312Packages.pip
+    # python312Packages.torchvision
+    # python312Packages.torchWithCuda
+    # python312Packages.pybind11
+     libGL libGLU
+    ntfs3g
+    linuxPackages.nvidia_x11
+    glib zlib stdenv.cc
+    qemu
+    # ollamagpu
+    wireguard-tools
+  ];
 
-  #   python310
-  #   python310Packages.pip
-  #   python310Packages.torchvision
-  #   python310Packages.torchWithCuda
-  #   python310Packages.pybind11
-  #   libGL libGLU
-  #   linuxPackages.nvidia_x11
-  #   glib zlib stdenv.cc
-  # ];
-
-  services.logind.extraConfig = "RuntimeDirectorySize=50%";
+  networking.extraHosts = ''
+    10.0.0.21 plex.xen.wesl.ee
+  '';
 
   # HTC Vive Pro 2
-  nixpkgs.overlays = [(self: super: {
-    vivepro2-linux-driver = pkgs.fetchFromGitHub {
-      owner = "CertainLach";
-      repo = "VivePro2-Linux-Driver";
-      rev = "02b25f136a5d3ad8d4fd4f4108592d285ebf49c5";
-      sha256 = "";
-    };
-  })];
+  # nixpkgs.overlays = [(self: super: {
+  #   vivepro2-linux-driver = pkgs.fetchFromGitHub {
+  #     owner = "CertainLach";
+  #     repo = "VivePro2-Linux-Driver";
+  #     rev = "02b25f136a5d3ad8d4fd4f4108592d285ebf49c5";
+  #     sha256 = "";
+  #   };
+  # })];
 
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", GROUP="usb"
@@ -49,7 +58,21 @@
     # Valve dongle + lighthouses
     SUBSYSTEM=="usb", ATTRS{idVendor}=="28de", ATTRS{idProduct}=="2101", GROUP="usb"
     SUBSYSTEM=="usb", ATTRS{idVendor}=="28de", ATTRS{idProduct}=="2000", GROUP="usb"
+    # Bigscreen Beyond
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="35db", ATTRS{idProduct}=="0101", GROUP="usb"
+
+    # DDCutil
+    KERNEL=="i2c-[0-9]*", TAG+="uaccess"
   '';
+
+  virtualisation.libvirtd = {
+  enable = true;
+  qemu = {
+    package = pkgs.qemu_kvm;
+    runAsRoot = true;
+    swtpm.enable = true;
+  };
+};
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -60,7 +83,7 @@
       lightdm.enable = true;
       defaultSession = "none+awesome";
       setupCommands = ''
-        ${pkgs.xorg.xrandr}/bin/xrandr --output HDMI-0 --auto --output DP-2 --auto --rotate left --left-of HDMI-0
+        ${pkgs.xorg.xrandr}/bin/xrandr --output HDMI-0 --pos 1440x1120 --auto --output DP-2 --auto --rotate left --left-of HDMI-0
         ${pkgs.xorg.xset}/bin/xset -dpms
         ${pkgs.xorg.xset}/bin/xset s off
       '';
@@ -105,21 +128,23 @@
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
   };
 
+programs.nix-ld.enable = true;
+
+    hardware.nvidia.open = true;
     # Enable sound.
-  sound.enable = true;
-      hardware.pulseaudio = {
-        enable = true;
-        daemon.config = {
-          flat-volumes = "no";
-          resample-method = "speex-float-10";
-        };
-        package = pkgs.pulseaudioFull;
-      };
+      #hardware.pulseaudio = {
+      #  enable = true;
+      #  daemon.config = {
+      #    flat-volumes = "no";
+      #    resample-method = "speex-float-10";
+      #  };
+      #  package = pkgs.pulseaudioFull;
+      #};
       hardware.bluetooth = {
         enable = true;
         package = pkgs.bluez;
       };
-      nixpkgs.config.pulseaudio = true;
+      #nixpkgs.config.pulseaudio = true;
 
         services.xserver = {
     screenSection = ''
@@ -131,19 +156,19 @@
 
   i18n.defaultLocale = "en_US.UTF-8";
   fileSystems."/mnt/my-cloud" = {
-      device = "10.0.10.2:/personal";
+      device = "10.0.30.1:/personal";
       fsType = "nfs";
-      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" "uid=wesl-ee" ];
   };
 
   fileSystems."/mnt/public" = {
-      device = "10.0.10.2:/public";
+      device = "10.0.30.1:/public";
       fsType = "nfs";
-      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
+      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" "uid=wesl-ee" ];
   };
 
   fileSystems."/mnt/steam" = {
-      device = "10.0.10.2:/steam";
+      device = "10.0.30.1:/steam";
       fsType = "nfs";
       options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
   };
@@ -152,6 +177,12 @@
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
   hardware.opengl.enable = true;
+  # boot.kernelPatches = [
+  #   { name = "drm-edid-non-desktop-beyond";
+  #     patch = ./beyondKernel.patch;
+  #   }
+  # ];
+
   # boot.kernelPackages = pkgs.linuxPackages_latest;
   # boot.kernelPatches = [
   #   { name = "drm-edid-non-desktop";
@@ -176,7 +207,7 @@
 
   boot.initrd.availableKernelModules = [ "ahci" "virtio_pci" "xhci_pci" "sym53c8xx" "usbhid" "sr_mod" "virtio_blk" ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
+  boot.kernelModules = [ "kvm-intel" "i2c_dev" ];
   boot.extraModulePackages = [ ];
 
   # Steam stuff
@@ -197,4 +228,6 @@
   swapDevices = [ ];
 
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
+  users.users.wesl-ee.extraGroups = [ "docker" "disk" "adbusers" "libvirtd" ];
 }

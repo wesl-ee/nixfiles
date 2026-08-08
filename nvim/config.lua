@@ -1,6 +1,6 @@
 require('plugins')
 vim.notify = require("notify")
-vim.cmd("colorscheme paper")
+vim.cmd("colorscheme catppuccin")
 vim.cmd("set nofixendofline")
 vim.cmd("hi clear SignColumn")
 vim.api.nvim_set_hl(0, "Normal", { ctermbg=NONE, guibg=NONE })
@@ -54,51 +54,6 @@ require('lualine').setup({ options = {
   theme = 'papercolor_light',
   icons_enabled = false
 }})
---require('copilot').setup({
---  panel = {
---    enabled = false,
---    -- auto_refresh = false,
---    -- keymap = {
---    --   jump_prev = "[[",
---    --   jump_next = "]]",
---    --   accept = "<CR>",
---    --   refresh = "gr",
---    --   open = "<M-CR>"
---    -- },
---    -- layout = {
---    --   position = "bottom", -- | top | left | right
---    --   ratio = 0.4
---    -- },
---  },
---  suggestion = {
---    enabled = true,
---    auto_trigger = false,
---    hide_during_completion = true,
---    debounce = 75,
---    keymap = {
---      accept = "<C-\\>",
---      accept_word = false,
---      accept_line = false,
---      -- next = "<M-]>",
---      next = "<C-]>",
---      -- prev = "<C-[>",
---      dismiss = "<M-]>",
---    },
---  },
---  filetypes = {
---    yaml = false,
---    markdown = false,
---    help = false,
---    gitcommit = false,
---    gitrebase = false,
---    hgcommit = false,
---    svn = false,
---    cvs = false,
---    ["."] = false,
---  },
---  copilot_node_command = 'node', -- Node.js version must be > 18.x
---  server_opts_overrides = {},
---})
 require("telescope").setup({})
 require("telescope").load_extension("workspaces")
 vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files)
@@ -148,7 +103,6 @@ local on_attach = function(client, bufnr)
   -- Status line
   lsp_status.on_attach(client)
 end
-local lsp = require "lspconfig"
 local cmp = require'cmp'
 local lspkind_comparator = function(conf)
   local lsp_types = require('cmp.types').lsp
@@ -300,238 +254,64 @@ cmp.setup.filetype('gitcommit', {
   })
 })
 -- LSP config
+-- LSP config (nvim 0.11+)
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
-local lsp_opts = {
-  capabilities = capabilities,
-  on_attach = on_attach
-}
-lsp.rust_analyzer.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
+
+-- helper to avoid repeating ourselves
+local function cfg(name, config)
+  config = config or {}
+  config.capabilities = capabilities
+  config.on_attach = on_attach
+  vim.lsp.config(name, config)
+  vim.lsp.enable(name)
+end
+
+cfg("rust_analyzer", {
   settings = {
-    checkOnSave = {
-      command = "clippy",
-    },
+    checkOnSave = { command = "clippy" },
     diagnostics = {
       enable = true,
-      experimental = {
-        enable = true,
-      },
+      experimental = { enable = true },
     },
   },
 })
-lsp.pyright.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-lsp.tsserver.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-lsp.nil_ls.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-lsp.solc.setup{
-  capabilities = capabilities,
-  on_attach = on_attach,
-}
-lsp.ccls.setup{
-  capabilities = capabilities,
-  on_attach = on_attach,
-}
-lsp.gopls.setup{
-  capabilities = capabilities,
-  on_attach = on_attach,
-}
---lsp.tabby_ml.setup{
---  -- capabilities = capabilities,
---  -- on_attach = on_attach,
---  cmd = {"npx", "tabby-agent", "--stdio", "--lsp"},
---}
-lsp.lua_ls.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
+
+cfg("pyright")
+
+cfg("ts_ls")
+
+cfg("nil_ls")
+
+cfg("solc")
+
+cfg("ccls")
+
+cfg("gopls")
+
+cfg("lua_ls", {
   settings = {
     Lua = {
-      runtime = {
-    -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-    version = 'LuaJIT',
-      },
-      diagnostics = {
-    -- Get the language server to recognize the `vim` global
-    globals = {'vim'},
-      },
-      workspace = {
-    -- Make the server aware of Neovim runtime files
-    library = vim.api.nvim_get_runtime_file("", true),
-      },
-      -- Do not send telemetry data containing a randomized but unique identifier
+      runtime = { version = "LuaJIT" },
+      diagnostics = { globals = { "vim" } },
+      workspace = { library = vim.api.nvim_get_runtime_file("", true) },
       telemetry = { enable = false },
     },
   },
 })
-
-local starters = require('model.prompts.starters')
-local starters_chats = require('model.prompts.chats')
---local langserve = require('model.providers.langserve')
-local openai = require('model.providers.openai')
-local llm = require('model')
-local prompts = require('model.util.prompts')
-local function code_replace_fewshot(input, context)
-  local surrounding_text = prompts.limit_before_after(context, 30)
-
-  local content = 'The code:\n```\n'
-    .. surrounding_text.before
-    .. '<@@>'
-    .. surrounding_text.after
-    .. '\n```\n'
-
-  if context.selection then -- we only use input if we have a visual selection
-    content = content .. '\n\nExisting text at <@@>:\n```' .. input .. '```\n'
-  end
-
-  if #context.args > 0 then
-    content = content .. '\nInstruction: ' .. context.args
-  end
-
-  local messages = {
-    {
-      role = 'user',
-      content = content,
-    },
-  }
-
-  return {
-    instruction = 'You are an expert programmer. You are given a snippet of code which includes the symbol <@@>. Complete the correct code that should replace the <@@> symbol given the content. Only respond with the code that should replace the symbol <@@>. If you include any other code, the program will fail to compile and the user will be very sad.',
-    fewshot = {
-      {
-        role = 'user',
-        content = 'The code:\n```\nfunction greet(name) { console.log("Hello " <@@>) }\n```\n\nExisting text at <@@>: `+ nme`',
-      },
-      {
-        role = 'assistant',
-        content = '+ name',
-      },
-    },
-    messages = messages,
-  }
-end
-
-
-require("model").setup((function()
-    -- local langchain_endpoint = 'http://127.0.0.1:8000/'
-    --
-    return {
-    hl_group = 'Comment',
-    prompts = {
-      ['gpt'] = starters['gpt'],
-      ['code'] = vim.tbl_extend('force', starters['openai:gpt4-code'], {
-          builder = function(input, context)
-            return openai.adapt(code_replace_fewshot(input, context))
-          end,
-      }),
-      ['commit'] = starters['commit'],
-      --['langserve:translator-jp-en'] = {
-      --  provider = langserve,
-      --  options = {
-      --    base_url = langchain_endpoint .. 'translator/',
-      --    output_parser = langserve.chat_generation_chunk_parser
-      --  },
-      --  builder = function(input, context)
-      --    return {
-      --      input_language = "english",
-      --      output_language = "japanese",
-      --      text = input,
-      --    }
-      --  end
-      --},
-      --['langserve:translator-en-jp'] = {
-      --  provider = langserve,
-      --  options = {
-      --    base_url = langchain_endpoint .. 'translator/',
-      --    output_parser = langserve.chat_generation_chunk_parser
-      --  },
-      --  builder = function(input, context)
-      --    return {
-      --      input_language = "japanese",
-      --      output_language = "english",
-      --      text = input,
-      --    }
-      --  end
-      --},
-      --['langserve:code-completion'] = {
-      --  provider = langserve,
-      --  options = {
-      --    base_url = langchain_endpoint .. 'coding-assistant/',
-      --    output_parser = langserve.chat_generation_chunk_parser
-      --  },
-      --  builder = function(input, context)
-      --    local surrounding_text = prompts.limit_before_after(context, 30)
-      --    local selection = ""
-      --    if context.selection then -- we only use input if we have a visual selection
-      --      selection = input
-      --    end
-      --    return {
-      --      before = surrounding_text.before,
-      --      after = surrounding_text.after,
-      --      selection = selection,
-      --      filename = context.filename,
-      --    }
-      --  end,
-      --  mode = llm.mode.INSERT_OR_REPLACE,
-      --},
-      --['langserve:writing-assistant'] = {
-      --  provider = langserve,
-      --  options = {
-      --    base_url = langchain_endpoint .. 'writing-assistant/',
-      --    output_parser = langserve.chat_generation_chunk_parser,
-      --  },
-      --  builder = function(input, context)
-      --    return {
-      --      text = input,
-      --    }
-      --  end
-      --},
-      --['langserve:general-instruct'] = {
-      --  provider = langserve,
-      --  options = {
-      --    base_url = langchain_endpoint .. 'general-instruct/',
-      --    output_parser = langserve.chat_generation_chunk_parser,
-      --  },
-      --  builder = function(input, context)
-      --    return {
-      --      text = input,
-      --    }
-      --  end
-      --},
-      --['langserve:rewriting-assistant'] = {
-      --  provider = langserve,
-      --  options = {
-      --    base_url = langchain_endpoint .. 'rewriting-assistant/',
-      --    output_parser = langserve.chat_generation_chunk_parser,
-      --  },
-      --  builder = function(input, context)
-      --    return {
-      --      text = input,
-      --    }
-      --  end,
-      --  mode = llm.mode.REPLACE,
-      --},
-    },
-    chats = {
-      ['gpt'] = vim.tbl_extend('force', starters_chats['openai'], {
-        params = {
-          model = 'gpt-4o'
-        }
-      }),
-    },
-} end)())
 
 require("notify").setup({
     background_colour = "#000000",
     render = "minimal",
     top_down = false,
     stages = "static",
+})
+
+require("catppuccin").setup({
+    transparent_background = true;
+    telescope = true,
+    native_lsp = {
+      enabled = true,
+    },
+    gitsigns = true,
 })
 
