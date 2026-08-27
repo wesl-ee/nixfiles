@@ -16,7 +16,7 @@
   '';
 
   home.packages = [
-    pkgs.neofetch
+    pkgs.fastfetch
     pkgs.lynx
     pkgs.ipfs
     pkgs.kubectl

@@ -1,9 +1,12 @@
 require('plugins')
 vim.notify = require("notify")
+require("catppuccin").setup({
+    transparent_background = true,
+    float = { transparent = true },
+})
 vim.cmd("colorscheme catppuccin")
 vim.cmd("set nofixendofline")
 vim.cmd("hi clear SignColumn")
-vim.api.nvim_set_hl(0, "Normal", { ctermbg=NONE, guibg=NONE })
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = "yes"
@@ -306,12 +309,4 @@ require("notify").setup({
     stages = "static",
 })
 
-require("catppuccin").setup({
-    transparent_background = true;
-    telescope = true,
-    native_lsp = {
-      enabled = true,
-    },
-    gitsigns = true,
-})
 

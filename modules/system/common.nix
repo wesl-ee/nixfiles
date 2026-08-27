@@ -29,7 +29,6 @@
   };
 
   programs.zsh.enable = true;
-  programs.adb.enable = true;
 
   # xorg + Awesome WM
   services.xserver = {
@@ -50,6 +49,7 @@
     links2
     nmap
     awesome
+    android-tools
   ];
 
   programs.gnupg.agent = {
@@ -58,6 +58,39 @@
   };
 
   programs.dconf.enable = true;
+
+  environment.etc."chromium/policies/managed/history.json".text = builtins.toJSON {
+    SavingBrowserHistoryDisabled = true;
+    NewTabPageLocation = "about:blank";
+    SearchSuggestEnabled = false;
+  };
+
+  environment.etc."chromium/policies/managed/search.json".text = builtins.toJSON {
+    DefaultSearchProviderEnabled = true;
+    DefaultSearchProviderName = "Google AI Mode";
+    DefaultSearchProviderKeyword = "ai";
+    DefaultSearchProviderSearchURL = "https://www.google.com/search?q={searchTerms}&udm=50";
+  };
+
+  environment.etc."chromium/policies/managed/site-search.json".text = builtins.toJSON {
+    SiteSearchSettings = [
+      { name = "Nix Packages"; shortcut = "np"; url = "https://search.nixos.org/packages?type=packages&query={searchTerms}"; }
+      { name = "NixOS Wiki"; shortcut = "nw"; url = "https://nixos.wiki/index.php?search={searchTerms}"; }
+      { name = "Startpage"; shortcut = "sp"; url = "https://www.startpage.com/sp/search?query={searchTerms}"; }
+      { name = "docs.rs"; shortcut = "dr"; url = "https://docs.rs/releases/search?query={searchTerms}"; }
+      { name = "Google Images"; shortcut = "gi"; url = "https://www.google.com/search?tbm=isch&q={searchTerms}"; }
+      { name = "Danbooru"; shortcut = "db"; url = "https://danbooru.donmai.us/posts?tags={searchTerms}"; }
+      { name = "Gelbooru"; shortcut = "gb"; url = "https://gelbooru.com/index.php?page=post&s=list&tags={searchTerms}"; }
+      { name = "Twitter"; shortcut = "tw"; url = "https://twitter.com/search?q={searchTerms}&f=live"; }
+      { name = "Github"; shortcut = "gh"; url = "https://github.com/search?q={searchTerms}"; }
+      { name = "Etherscan"; shortcut = "es"; url = "https://etherscan.io/search?q={searchTerms}"; }
+      { name = "Tradingview"; shortcut = "tv"; url = "https://www.tradingview.com/chart/?symbol={searchTerms}"; }
+      { name = "SearchGPT"; shortcut = "s"; url = "https://chatgpt.com/?q={searchTerms}&temporary-chat=true&hints=search"; }
+      { name = "ChatGPT"; shortcut = "c"; url = "https://chatgpt.com/?q={searchTerms}&temporary-chat=true"; }
+      { name = "Google"; shortcut = "g"; url = "https://www.google.com/search?q={searchTerms}"; }
+      { name = "Wikipedia"; shortcut = "wp"; url = "https://en.wikipedia.org/w/index.php?search={searchTerms}"; }
+    ];
+  };
 
   fonts = {
     fontDir.enable = true;

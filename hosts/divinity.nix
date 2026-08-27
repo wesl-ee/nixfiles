@@ -8,6 +8,9 @@
 
   services.openssh.enable = true;
   services.openssh.forwardX11 = true;
+
+  # G600/G920 button remapping (piper GUI talks to this)
+  services.ratbagd.enable = true;
   networking.interfaces.enp1s0.useDHCP = true;
   # networking.interfaces.enp15s3u3u2c2.useDHCP = false;
 
@@ -83,7 +86,7 @@
       lightdm.enable = true;
       defaultSession = "none+awesome";
       setupCommands = ''
-        ${pkgs.xorg.xrandr}/bin/xrandr --output HDMI-0 --pos 1440x1120 --auto --output DP-2 --auto --rotate left --left-of HDMI-0
+        ${pkgs.xorg.xrandr}/bin/xrandr --output HDMI-0 --pos 1440x1120 --auto --output DP-2 --mode "2560x1440" --rotate left --left-of HDMI-0
         ${pkgs.xorg.xset}/bin/xset -dpms
         ${pkgs.xorg.xset}/bin/xset s off
       '';
@@ -99,6 +102,8 @@
     '';
     deviceSection = ''
       Option "UseEdidDpi" "FALSE"
+      # wonky cable
+      Option "ConnectedMonitor" "DFP-2, DFP-3"
     '';
     xrandrHeads = [
       "DP-2" {
@@ -168,9 +173,9 @@ programs.nix-ld.enable = true;
   };
 
   fileSystems."/mnt/steam" = {
-      device = "10.0.30.1:/steam";
-      fsType = "nfs";
-      options = [ "noauto" "x-systemd.idle-timeout=60" "x-systemd.mount-timeout=5s" ];
+      device = "/dev/disk/by-label/steam";
+      fsType = "ext4";
+      options = [ "defaults" "noatime" ];
   };
 
   nixpkgs.config.allowUnfree = true;
@@ -205,6 +210,11 @@ programs.nix-ld.enable = true;
 
   virtualisation.docker.enable = true;
 
+  services.ollama = {
+    enable = true;
+    package = pkgs.ollama-cuda;
+  };
+
   boot.initrd.availableKernelModules = [ "ahci" "virtio_pci" "xhci_pci" "sym53c8xx" "usbhid" "sr_mod" "virtio_blk" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" "i2c_dev" ];
@@ -229,5 +239,5 @@ programs.nix-ld.enable = true;
 
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
-  users.users.wesl-ee.extraGroups = [ "docker" "disk" "adbusers" "libvirtd" ];
+  users.users.wesl-ee.extraGroups = [ "docker" "disk" "libvirtd" ];
 }

@@ -47,13 +47,14 @@
 
     # Language servers
     pkgs.nodejs
-    pkgs.nodePackages.typescript
+    pkgs.typescript
     pkgs.lua-language-server
     pkgs.rust-analyzer
     pkgs.gopls
     pkgs.ccls
 
     pkgs.shell-gpt
+    pkgs.opencode
   ];
 
   home.activation.installClaudeCode =

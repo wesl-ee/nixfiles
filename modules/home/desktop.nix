@@ -3,7 +3,7 @@
 { config, lib, pkgs, ... }:
 {
   home.packages = [
-    pkgs.neofetch
+    pkgs.fastfetch
     pkgs.lynx
     pkgs.sxiv
     pkgs.kubo
@@ -27,6 +27,8 @@
 
   programs.chromium = {
     enable = true;
+    # skips the profile picker
+    commandLineArgs = [ "--profile-directory=Default" ];
     extensions = [
       # Metamask
       {
@@ -88,12 +90,22 @@
     lockCmd = "\${pkgs.lightdm}/bin/dm-tool lock";
   };
 
-  xsession.windowManager.awesome.noArgb = true;
+  services.picom = {
+    enable = true;
+    backend = "glx";
+    vSync = true;
+  };
 
   programs.mpv.enable = true;
   services.mpd = {
     enable = true;
     musicDirectory = "/mnt/public/Music";
+    extraConfig = ''
+      audio_output {
+        type "pipewire"
+        name "PipeWire"
+      }
+    '';
   };
   programs.ncmpcpp.enable = true;
 
